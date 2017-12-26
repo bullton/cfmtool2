@@ -3,7 +3,7 @@
 {% block title %}Login{% endblock %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static',filename='css/login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/login_register.css') }}">
 {% endblock %}
 
 {% block main %}
@@ -11,10 +11,10 @@
     <form action="" method="POST">
         <div class="form-container">
             <div class="form-group">
-                <input type="text" class="form-control" placeholder="username">
+                <input type="text" class="form-control" placeholder="username" name="username">
             </div>
             <div class="form-group">
-                <input type="password" class="form-control" placeholder="password">
+                <input type="password" class="form-control" placeholder="password" name="password">
             </div>
             <div class="form-group">
                 <button class="btn btn-primary btn-block">Sign In</button>
