@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Rule{% endblock %}
+
+
+{% block main %}
+    <div class="container-fluid">
+        <div class="row">
+            <!--left-->
+            <form action="/savenewrule/" method="POST">
+                <div class="col-md-2" id="leftCol">
+                    <div class="form-group">
+                        <label>Rule Name:</label>
+                        <input type="text" class="form-control" placeholder="rule name" name="rulename">
+                    </div>
+                    <div class="form-group">
+                        <label>Release:</label>
+                        <input type="text" class="form-control" placeholder="release" name="release">
+                    </div>
+                    <div class="form-group">
+                        <label>Customer:</label>
+                        <input type="text" class="form-control" placeholder="customer" name="customer">
+                    </div>
+                    <div class="form-group">
+                        <hr>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary btn-block">New</button>
+                    </div>
+                </div><!--/left-->
+            </form>
+            <!--right-->
+            <div class="col-md-5" id="midCol">
+                {% for k in key %}
+                    <div class="form-group">
+                        <label>{{ k }}:</label>
+                        <input type="text" class="form-control" placeholder={{ k }} name={{ k }}>
+                    </div>
+                {% endfor %}
+            </div><!--/middle-->
+            <div class="col-md-5" id="rightCol">Rule</div><!--/right-->
+        </div><!--/row-->
+    </div><!--/container-->
+{% endblock %}

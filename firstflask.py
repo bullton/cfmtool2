@@ -3,7 +3,7 @@
 from flask import Flask,render_template,url_for,request,redirect,session
 from werkzeug.utils import secure_filename
 import config
-from models import User, Source
+from models import User, Source, Rule
 from exts import db
 from decorators import login_require
 from sqlalchemy import desc
@@ -13,6 +13,9 @@ import os, datetime, platform
 app = Flask(__name__)
 app.config.from_object(config)
 db.init_app(app)
+
+
+rulekey = ['CustomerFeatureWhiteList','CustomerFeatureBlackList','CustomerTopFaultList','CustomerCareFunctionTag','RRUType','R4BBUType','R3BBUType','FSIHBBUType','R2BBUType','UUFFilter','UUFFilterExclusion','KPIFilter','KPIFilterExclusion','CAFilter','CAFilterExclusion','OAMStabFilter','OAMStabFilterExclusion','PETStabFilter','PETStabFilterExclusion','FuncFilter','FuncFilterExclusion','CategorySearchField','CategoryTag','CustomerBBU','CustomerRRU','CustomerTitleKeywordWhiteList','CustomerTitleKeywordBlackList','CustomerPRWhiteList','CustomerPRBlackList','FTComSc']
 
 
 @app.route('/')
@@ -28,6 +31,13 @@ def index():
 @login_require
 def data():
     return render_template('data.html')
+
+@app.route('/newrule/')
+@login_require
+def newrule():
+    rulekey = Rule.__dict__.iterkeys()
+    print rulekey
+    return render_template('newrule.html', key = rulekey)
 
 
 @app.route('/login/',methods=['GET','POST'])
@@ -80,7 +90,8 @@ def upload():
     uf = request.files['input-b1']
     filename = secure_filename(uf.filename)
     currentpath = os.path.dirname(__file__)
-    savepath = currentpath + '\\uploadfolder\\' + filename
+    ossep = os.path.sep
+    savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
     uf.save(savepath)
     # update db
     source = Source(path=savepath,filename=filename)
@@ -89,7 +100,7 @@ def upload():
     source.owner = user
     db.session.add(source)
     db.session.commit()
-    return redirect(url_for('data'))
+    return redirect(url_for('index'))
 
 
 @app.context_processor

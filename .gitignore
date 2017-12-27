@@ -3,3 +3,4 @@ cfmtoolvenv
 *.pyc
 .idea
 migrations
+.DS_Store
