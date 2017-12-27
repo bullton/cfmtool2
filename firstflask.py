@@ -1,10 +1,14 @@
 # encoding = utf-8
 
 from flask import Flask,render_template,url_for,request,redirect,session
+from werkzeug.utils import secure_filename
 import config
-from models import User
+from models import User, Source
 from exts import db
 from decorators import login_require
+from sqlalchemy import desc
+import os, datetime, platform
+
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -15,7 +19,15 @@ db.init_app(app)
 @app.route('/index/')
 @login_require
 def index():
-        return render_template('index.html')
+    user_id = session.get('user_id')
+    sourcefilelist = Source.query.filter(Source.owner_id == user_id).order_by(desc(Source.id)).all()
+    return render_template('index.html', sources = sourcefilelist)
+
+
+@app.route('/data/')
+@login_require
+def data():
+    return render_template('data.html')
 
 
 @app.route('/login/',methods=['GET','POST'])
@@ -57,10 +69,27 @@ def register():
                 return redirect(url_for('login'))
 
 
-@app.route('/logout')
+@app.route('/logout/')
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
+
+@app.route('/upload/', methods = ['POST'])
+def upload():
+    uf = request.files['input-b1']
+    filename = secure_filename(uf.filename)
+    currentpath = os.path.dirname(__file__)
+    savepath = currentpath + '\\uploadfolder\\' + filename
+    uf.save(savepath)
+    # update db
+    source = Source(path=savepath,filename=filename)
+    user_id = session.get('user_id')
+    user = User.query.filter(User.id == user_id).first()
+    source.owner = user
+    db.session.add(source)
+    db.session.commit()
+    return redirect(url_for('data'))
 
 
 @app.context_processor

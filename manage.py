@@ -4,7 +4,8 @@ from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
 from firstflask import app
 from exts import db
-from models import User
+from models import User,Source
+
 
 manager = Manager(app)
 migrate = Migrate(app,db)
