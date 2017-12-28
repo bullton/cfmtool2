@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Rule{% endblock %}
+{% block title %}New Rule{% endblock %}
 
 
 {% block main %}
     <div class="container-fluid">
         <div class="row">
             <!--left-->
-            <form action="/savenewrule/" method="POST">
+            <form action="/newrule/" method="POST">
                 <div class="col-md-2" id="leftCol">
                     <div class="form-group">
                         <label>Rule Name:</label>
@@ -25,20 +25,36 @@
                         <hr>
                     </div>
                     <div class="form-group">
+                        <label>Select Rules:</label>
+                        <select class="form-control">
+                            {% for userrule in userrules %}
+                                <option>{{ userrule.rulename+'@'+userrule.release }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <button class="btn btn-primary btn-block">New</button>
                     </div>
                 </div><!--/left-->
+
+                <!--right-->
+                <div class="col-md-5" id="midCol">
+                    {% for k in key1 %}
+                        <div class="form-group">
+                            <label>{{ k }}:</label>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }}>
+                        </div>
+                    {% endfor %}
+                </div><!--/middle-->
+                <div class="col-md-5" id="rightCol">
+                    {% for k in key2 %}
+                        <div class="form-group">
+                            <label>{{ k }}:</label>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }}>
+                        </div>
+                    {% endfor %}
+                </div><!--/right-->
             </form>
-            <!--right-->
-            <div class="col-md-5" id="midCol">
-                {% for k in key %}
-                    <div class="form-group">
-                        <label>{{ k }}:</label>
-                        <input type="text" class="form-control" placeholder={{ k }} name={{ k }}>
-                    </div>
-                {% endfor %}
-            </div><!--/middle-->
-            <div class="col-md-5" id="rightCol">Rule</div><!--/right-->
         </div><!--/row-->
     </div><!--/container-->
 {% endblock %}
