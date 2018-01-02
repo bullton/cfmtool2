@@ -11,6 +11,13 @@
             document.form1.action = "/editrule/showedit/";
             $("form").submit();
         }
+
+        var btn = document.getElementById('saverule');
+        btn.addEventListener("click", postedit(), false);
+        function postedit() {
+            document.form1.action = "/editrule/";
+            $("form").submit();
+        }
     </script>
 {% endblock %}
 
@@ -22,15 +29,15 @@
                 <div class="col-md-2" id="leftCol">
                     <div class="form-group">
                         <label>Rule Name:</label>
-                        <input type="text" class="form-control" placeholder="rule name" name="rulename">
+                        <input type="text" class="form-control" placeholder="rule name" name="rulename" value="{{ rule.name }}">
                     </div>
                     <div class="form-group">
                         <label>Release:</label>
-                        <input type="text" class="form-control" placeholder="release" name="release">
+                        <input type="text" class="form-control" placeholder="release" name="release" value="{{ rule.release }}">
                     </div>
                     <div class="form-group">
                         <label>Customer:</label>
-                        <input type="text" class="form-control" placeholder="customer" name="customer">
+                        <input type="text" class="form-control" placeholder="customer" name="customer" value="{{ rule.customer }}">
                     </div>
                     <div class="form-group">
                         <hr>
@@ -42,9 +49,10 @@
                                 <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
                             {% endfor %}
                         </select>
+                        <script>$(".form-control").val("{{ ruleid }}")</script>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary btn-block" name="saverule">Save</button>
+                        <button class="btn btn-primary btn-block" name="saverule" onclick="postedit()">Save</button>
                     </div>
                 </div><!--/left-->
 

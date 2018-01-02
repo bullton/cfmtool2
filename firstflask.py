@@ -91,9 +91,10 @@ def newrule():
 @login_require
 def editrule():
     user_id = session.get('user_id')
+    rule = {'rulename':'rulename','release':'release','customer':'customer'}
+    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
     if request.method == 'GET':
-        userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
-        return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
+        return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist,rule=rule)
     else:
         rulename = request.form.get('rulename')
         customer = request.form.get('customer')
@@ -130,8 +131,10 @@ def editrule():
         rule = Rule.query.filter(Rule.id == id).first()
         if rule:
             checkrulename = Rule.query.filter(Rule.rulename == rulename).first()
-            if checkrulename:
-                return 'Rule is already exist, please try another rule name!'
+            if checkrulename and checkrulename.id != int(id):
+                print checkrulename.id, type(checkrulename.id)
+                print id,type(id)
+                return 'rulename exist'
             else:
                 rule.rulename = rulename
                 rule.release = release
@@ -164,7 +167,15 @@ def editrule():
                 rule.r3bbu = r3bbu
                 rule.ftcomsc = ftcomsc
                 db.session.commit()
-                return redirect(url_for('editrule'))
+                rule = Rule.query.filter(Rule.id == id).first()
+                key1 = OrderedDict()
+                key2 = OrderedDict()
+                for k in rulekey1.keys():
+                    key1[k] = vars(rule)[k]
+                for k in rulekey2.keys():
+                    key2[k] = vars(rule)[k]
+                # return redirect(url_for('editrule'))
+                return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=id, rule=rule)
 
 
 @app.route('/editrule/showedit/',methods=['GET','POST'])
@@ -174,16 +185,13 @@ def showedit():
     ruleid = request.form.get('ruleid')
     rule = Rule.query.filter(Rule.id == ruleid).first()
     userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
-    print 'rule=',rule
-    print 'ruleid=', ruleid
     key1 = OrderedDict()
     key2 = OrderedDict()
     for k in rulekey1.keys():
-        print 'k=',k
-        key1[k] = rule.__class__
+        key1[k] = vars(rule)[k]
     for k in rulekey2.keys():
-        key2[k] = rule.__class__
-    return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist)
+        key2[k] = vars(rule)[k]
+    return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 
 
