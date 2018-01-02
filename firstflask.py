@@ -128,38 +128,52 @@ def editrule():
 
         rule = Rule.query.filter(Rule.id == id).first()
         if rule:
-            rule.rulename = rulename
-            rule.release = release
-            rule.customer = customer
-            rule.customer_feature_white = customer_feature_white
-            rule.customer_feature_black = customer_feature_black
-            rule.customer_top_fault = customer_top_fault
-            rule.customer_care_function = customer_care_function
-            rule.uuf_filter = uuf_filter
-            rule.uuf_exclusion = uuf_exclusion
-            rule.kpi_filter = kpi_filter
-            rule.kpi_exclusion = kpi_exclusion
-            rule.ca_filter = ca_filter
-            rule.ca_exclusion = ca_exclusion
-            rule.oamstab_filter = oamstab_filter
-            rule.oamstab_exclusion = oamstab_exclusion
-            rule.pet_filter = pet_filter
-            rule.pet_exclusion = pet_exclusion
-            rule.func_filter = func_filter
-            rule.func_exclusion = func_exclusion
-            rule.category_search_field = category_search_field
-            rule.category_tag = category_tag
-            rule.customer_rru = customer_rru
-            rule.customer_bbu = customer_bbu
-            rule.customer_keyword_white = customer_keyword_white
-            rule.customer_keyword_black = customer_keyword_black
-            rule.customer_pronto_white = customer_pronto_white
-            rule.customer_pronto_black = customer_pronto_black
-            rule.r4bbu = r4bbu
-            rule.r3bbu = r3bbu
-            rule.ftcomsc = ftcomsc
-            db.session.commit()
-            return redirect(url_for('editrule'))
+            checkrulename = Rule.query.filter(Rule.rulename == rulename).first()
+            if checkrulename:
+                return 'Rule is already exist, please try another rule name!'
+            else:
+                rule.rulename = rulename
+                rule.release = release
+                rule.customer = customer
+                rule.customer_feature_white = customer_feature_white
+                rule.customer_feature_black = customer_feature_black
+                rule.customer_top_fault = customer_top_fault
+                rule.customer_care_function = customer_care_function
+                rule.uuf_filter = uuf_filter
+                rule.uuf_exclusion = uuf_exclusion
+                rule.kpi_filter = kpi_filter
+                rule.kpi_exclusion = kpi_exclusion
+                rule.ca_filter = ca_filter
+                rule.ca_exclusion = ca_exclusion
+                rule.oamstab_filter = oamstab_filter
+                rule.oamstab_exclusion = oamstab_exclusion
+                rule.pet_filter = pet_filter
+                rule.pet_exclusion = pet_exclusion
+                rule.func_filter = func_filter
+                rule.func_exclusion = func_exclusion
+                rule.category_search_field = category_search_field
+                rule.category_tag = category_tag
+                rule.customer_rru = customer_rru
+                rule.customer_bbu = customer_bbu
+                rule.customer_keyword_white = customer_keyword_white
+                rule.customer_keyword_black = customer_keyword_black
+                rule.customer_pronto_white = customer_pronto_white
+                rule.customer_pronto_black = customer_pronto_black
+                rule.r4bbu = r4bbu
+                rule.r3bbu = r3bbu
+                rule.ftcomsc = ftcomsc
+                db.session.commit()
+                return redirect(url_for('editrule'))
+
+
+@app.route('/editrule/showedit/',methods=['GET','POST'])
+@login_require
+def showedit():
+    user_id = session.get('user_id')
+    ruleid = request.form.get('ruleid')
+    rule = Rule.query.filter(Rule.id == ruleid).first()
+    return render_template('editrule.html')
+
 
 
 @app.route('/login/',methods=['GET','POST'])

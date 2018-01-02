@@ -4,18 +4,13 @@
 
 {% block head %}
     <script>
-        $(document).ready(function() {
-            $("#saverule").click(function () {
+        var sel = document.getElementById('ruleid');
+        sel.addEventListener("change", showedit(), false);
 
-                $("#draw").attr("action", "/editrule/");
-                $("form").submit();
-            });
-            $("#ruleid").change(function () {
-
-                $("#draw").attr("action", "/showedit/");
-                $("form").submit();
-            });
-        })
+        function showedit() {
+            document.form1.action = "/editrule/showedit";
+            $("form").submit();
+        }
     </script>
 {% endblock %}
 
@@ -23,7 +18,7 @@
     <div class="container-fluid">
         <div class="row">
             <!--left-->
-            <form action="" method="POST">
+            <form name="form1" action="" method="POST">
                 <div class="col-md-2" id="leftCol">
                     <div class="form-group">
                         <label>Rule Name:</label>
@@ -42,7 +37,7 @@
                     </div>
                     <div class="form-group">
                         <label>Select Rules:</label>
-                        <select class="form-control" name="ruleid" id="ruleid">
+                        <select class="form-control" name="ruleid" id="ruleid" onchange="showedit()">
                             {% for userrule in userrules %}
                                 <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
                             {% endfor %}
@@ -58,7 +53,7 @@
                     {% for k in key1 %}
                         <div class="form-group">
                             <label>{{ k }}:</label>
-                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }}>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} value="1111">
                         </div>
                     {% endfor %}
                 </div><!--/middle-->
@@ -66,7 +61,7 @@
                     {% for k in key2 %}
                         <div class="form-group">
                             <label>{{ k }}:</label>
-                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }}>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} value="2222">
                         </div>
                     {% endfor %}
                 </div><!--/right-->
