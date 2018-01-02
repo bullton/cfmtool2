@@ -7,6 +7,7 @@ from models import User, Source, Rule
 from exts import db
 from decorators import login_require
 from sqlalchemy import desc
+from collections import OrderedDict
 import os, datetime, platform
 
 
@@ -15,8 +16,8 @@ app.config.from_object(config)
 db.init_app(app)
 
 
-rulekey1 = ['customer_feature_white','customer_top_fault','customer_bbu','customer_keyword_white','category_tag','uuf_filter','kpi_filter','ca_filter','oamstab_filter','pet_filter','func_filter','customer_pronto_white','r4bbu']
-rulekey2 = ['customer_feature_black','customer_care_function','customer_rru','customer_keyword_black','category_search_field','uuf_exclusion','kpi_exclusion','ca_exclusion','oamstab_exclusion','pet_exclusion','func_exclusion','customer_pronto_black','r3bbu','ftcomsc']
+rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
+rulekey2 = OrderedDict([('customer_feature_black','customer_feature_black'),('customer_care_function','customer_care_function'),('customer_rru','customer_rru'),('customer_keyword_black','customer_keyword_black'),('category_search_field','category_search_field'),('uuf_exclusion','uuf_exclusion'),('kpi_exclusion','kpi_exclusion'),('ca_exclusion','ca_exclusion'),('oamstab_exclusion','oamstab_exclusion'),('pet_exclusion','pet_exclusion'),('func_exclusion','func_exclusion'),('customer_pronto_black','customer_pronto_black'),('r3bbu','r3bbu'),('ftcomsc','ftcomsc')])
 
 
 @app.route('/')
@@ -172,7 +173,17 @@ def showedit():
     user_id = session.get('user_id')
     ruleid = request.form.get('ruleid')
     rule = Rule.query.filter(Rule.id == ruleid).first()
-    return render_template('editrule.html')
+    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+    print 'rule=',rule
+    print 'ruleid=', ruleid
+    key1 = OrderedDict()
+    key2 = OrderedDict()
+    for k in rulekey1.keys():
+        print 'k=',k
+        key1[k] = rule.__class__
+    for k in rulekey2.keys():
+        key2[k] = rule.__class__
+    return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist)
 
 
 

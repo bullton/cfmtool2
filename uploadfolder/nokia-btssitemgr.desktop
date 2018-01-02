@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=BTS Site Manager
+Comment=BTS Site Manager
+Exec=btssitemanager
+Icon=/usr/share/pixmaps/btssitemanager.png
+Type=Application
+Terminal=false
+Categories=Application;X-Nokia-BTSSiteManager;
+Encoding=UTF-8

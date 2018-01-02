@@ -4,3 +4,4 @@ cfmtoolvenv
 .idea
 migrations
 .DS_Store
+venv

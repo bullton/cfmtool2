@@ -8,7 +8,7 @@
         sel.addEventListener("change", showedit(), false);
 
         function showedit() {
-            document.form1.action = "/editrule/showedit";
+            document.form1.action = "/editrule/showedit/";
             $("form").submit();
         }
     </script>
@@ -50,18 +50,18 @@
 
                 <!--right-->
                 <div class="col-md-5" id="midCol">
-                    {% for k in key1 %}
+                    {% for k,v in key1.items() %}
                         <div class="form-group">
                             <label>{{ k }}:</label>
-                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} value="1111">
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} value={{ v }}>
                         </div>
                     {% endfor %}
                 </div><!--/middle-->
                 <div class="col-md-5" id="rightCol">
-                    {% for k in key2 %}
+                    {% for k,v in key2.items() %}
                         <div class="form-group">
                             <label>{{ k }}:</label>
-                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} value="2222">
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} value={{ v }}>
                         </div>
                     {% endfor %}
                 </div><!--/right-->
