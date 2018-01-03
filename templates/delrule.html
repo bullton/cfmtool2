@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit Rule{% endblock %}
+{% block title %}Del Rule{% endblock %}
 
 {% block head %}
     <script>
@@ -8,14 +8,14 @@
         sel.addEventListener("change", showedit(), false);
 
         function showedit() {
-            document.form1.action = "/editrule/showedit/";
+            document.form1.action = "/delrule/ref/";
             $("form").submit();
         }
 
         var btn = document.getElementById('saverule');
         btn.addEventListener("click", postedit(), false);
         function postedit() {
-            document.form1.action = "/editrule/";
+            document.form1.action = "/delrule/";
             $("form").submit();
         }
     </script>
@@ -52,7 +52,7 @@
                         <script>$(".form-control").find("option[value='{{ ruleid }}']").attr("selected",true)</script>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary btn-block" name="saverule" onclick="postedit()">Save</button>
+                        <button class="btn btn-primary btn-block" name="saverule" onclick="postedit()">Delete</button>
                     </div>
 
                 </div><!--/left-->

@@ -94,7 +94,7 @@ def editrule():
     rule = {'rulename':'rulename','release':'release','customer':'customer'}
     userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
     if request.method == 'GET':
-        return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist,rule=rule)
+        return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
     else:
         rulename = request.form.get('rulename')
         customer = request.form.get('customer')
@@ -194,6 +194,54 @@ def showedit():
     return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 
+@app.route('/newrule/ref/',methods=['GET','POST'])
+@login_require
+def newref():
+    user_id = session.get('user_id')
+    ruleid = request.form.get('ruleid')
+    rule = Rule.query.filter(Rule.id == ruleid).first()
+    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+    key1 = OrderedDict()
+    key2 = OrderedDict()
+    for k in rulekey1.keys():
+        key1[k] = vars(rule)[k]
+    for k in rulekey2.keys():
+        key2[k] = vars(rule)[k]
+    return render_template('newrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
+
+
+@app.route('/delrule/',methods=['GET','POST'])
+@login_require
+def delrule():
+    user_id = session.get('user_id')
+    rule = {'rulename': 'rulename', 'release': 'release', 'customer': 'customer'}
+    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+    if request.method == 'GET':
+        return render_template('delrule.html', key1=rulekey1, key2=rulekey2, userrules=userrulelist)
+    else:
+        id = request.form.get('ruleid')
+        rule = Rule.query.filter(Rule.id == id).first()
+        if rule:
+            db.session.delete(rule)
+            db.session.commit()
+            userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+            return render_template('delrule.html',key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
+
+
+@app.route('/delrule/ref/',methods=['GET','POST'])
+@login_require
+def delref():
+    user_id = session.get('user_id')
+    ruleid = request.form.get('ruleid')
+    rule = Rule.query.filter(Rule.id == ruleid).first()
+    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+    key1 = OrderedDict()
+    key2 = OrderedDict()
+    for k in rulekey1.keys():
+        key1[k] = vars(rule)[k]
+    for k in rulekey2.keys():
+        key2[k] = vars(rule)[k]
+    return render_template('delrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 @app.route('/login/',methods=['GET','POST'])
 def login():
