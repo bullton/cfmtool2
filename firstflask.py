@@ -8,7 +8,7 @@ from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform
+import os, datetime, platform, xlrd
 
 
 app = Flask(__name__)
@@ -30,10 +30,27 @@ def index():
     return render_template('index.html', sources = sourcefilelist, userrules=userrulelist)
 
 
-@app.route('/data/')
+@app.route('/data/',methods=['GET','POST'])
 @login_require
 def data():
-    return render_template('data.html')
+    if request.method == 'GET':
+        pass
+    else:
+        convert_list = []
+        user_id = session.get('user_id')
+        source_path = request.form.get('selectsource')
+        select_rule = request.form.get('selectrule')
+        data = xlrd.open_workbook(source_path)
+        table = data.sheets()[0]
+        title = table.row_values(0)
+        for rownum in range(1, data.nrows):
+            rowvalue = data.row_values(rownum)
+            single = OrderedDict()
+            for colnum in range(0, len(rowvalue)):
+                print(title[colnum], rowvalue[colnum])
+                single[title[colnum]] = rowvalue[colnum]
+            convert_list.append(single)
+        return render_template('data.html',title=title,table=convert_list)
 
 
 @app.route('/newrule/',methods=['GET','POST'])

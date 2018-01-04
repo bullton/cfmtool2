@@ -1,5 +1,39 @@
-{% extends 'index.html' %}
+{% extends 'base.html' %}
 
-{% block datasource %}
-    <div>this is data</div>
+{% block title %}Data{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/data.css') }}">
+{% endblock %}
+
+{% block main %}
+    <div class="form-container">
+        <div class="row pre-scrollable">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        {% for tt in title %}
+                            <th>{{ tt }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table %}
+                        <tr>
+                            <th scope="row">{{ row[0]['Problem ID'] }}</th>
+                            {% for col in row %}
+                                <td>{{ col['Title'] }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>Mark</td>
+                        <td>Otto</td>
+                        <td>@mdo</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

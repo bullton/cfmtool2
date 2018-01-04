@@ -8,8 +8,10 @@
         sel.addEventListener("change", showedit(), false);
 
         function showedit() {
-            document.form1.action = "/editrule/showedit/";
-            $("form").submit();
+            if($("select[name='ruleid']").find("option:selected").val() != '' ){
+                document.form1.action = "/editrule/showedit/";
+                $("form").submit();
+            }
         }
 
         var btn = document.getElementById('saverule');
@@ -45,6 +47,7 @@
                     <div class="form-group">
                         <label>Select Rules:</label>
                         <select class="form-control" name="ruleid" id="ruleid" onchange="showedit()">
+                            <option value=""></option>
                             {% for userrule in userrules %}
                                 <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
                             {% endfor %}

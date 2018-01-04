@@ -17,24 +17,26 @@
                 <input id="input-b1" name="input-b1" type="file" class="file">
             </form>
         </div>
-        <div class="form-group">
-            <label>Select Source:</label>
-            <select class="form-control">
-                {% for source in sources %}
-                    <option>{{ source.id|string+'_'+source.filename+'_'+source.upload_time|string}}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Select Rules:</label>
-            <select class="form-control">
-                {% for userrule in userrules %}
-                    <option>{{ userrule.rulename+'@'+userrule.release }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <button class="btn btn-primary btn-block">Proceed</button>
-        </div>
+        <form action="/data/" enctype='multipart/form-data' method='POST'>
+            <div class="form-group">
+                <label>Select Source:</label>
+                <select class="form-control" name="selectsource" id="selectsource">
+                    {% for source in sources %}
+                        <option value="{{ source.path }}">{{ source.id|string+'_'+source.filename+'_'+source.upload_time|string}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Select Rules:</label>
+                <select class="form-control" name="selectrule" id="selectrule">
+                    {% for userrule in userrules %}
+                        <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary btn-block">Proceed</button>
+            </div>
+        </form>
     </div>
 {% endblock %}
