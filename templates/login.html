@@ -7,7 +7,18 @@
 {% endblock %}
 
 {% block main %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message[0] }} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <li>{{ message[1] }}</li>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
     <h3 class="page-title">Sign In</h3>
+
     <form action="" method="POST">
         <div class="form-container">
             <div class="form-group">
@@ -16,6 +27,11 @@
             <div class="form-group">
                 <input type="password" class="form-control" placeholder="password" name="password">
             </div>
+            {% if error %}
+                <div class="form-group">
+                    <p class="error"><strong>Error:</strong> {{ error }}
+                </div>
+            {% endif %}
             <div class="form-group">
                 <button class="btn btn-primary btn-block">Sign In</button>
             </div>

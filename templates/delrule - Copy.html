@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Del Rule{% endblock %}
+
+{% block head %}
+    <script>
+        var sel = document.getElementById('ruleid');
+        sel.addEventListener("change", showedit(), false);
+
+        function showedit() {
+            if($("select[name='ruleid']").find("option:selected").val() != '' ){
+                document.form1.action = "/delrule/ref/";
+                $("form").submit();
+            }
+        }
+
+        var btn = document.getElementById('saverule');
+        btn.addEventListener("click", postedit(), false);
+        function postedit() {
+            document.form1.action = "/delrule/";
+            $("form").submit();
+        }
+    </script>
+{% endblock %}
+
+{% block main %}
+    <div class="container-fluid">
+        <div class="row">
+            <!--left-->
+            <form name="form1" action="" method="POST">
+                <div class="col-md-2" id="leftCol">
+                    <div class="form-group">
+                        <label>Rule Name:</label>
+                        <input type="text" class="form-control" placeholder="rule name" name="rulename" {% if rule %}value="{{ rule.rulename }}" {% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label>Release:</label>
+                        <input type="text" class="form-control" placeholder="release" name="release" {% if rule %}value="{{ rule.release }}"{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer:</label>
+                        <input type="text" class="form-control" placeholder="customer" name="customer" {% if rule %}value="{{ rule.customer }}"{% endif %}>
+                    </div>
+                    <div class="form-group">
+                        <hr>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Rules:</label>
+                        <select class="form-control" name="ruleid" id="ruleid" onchange="showedit()">
+                            <option value=""></option>
+                            {% for userrule in userrules %}
+                                <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
+                            {% endfor %}
+                        </select>
+                        <script>$(".form-control").find("option[value='{{ ruleid }}']").attr("selected",true)</script>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-primary btn-block" name="saverule" onclick="postedit()">Delete</button>
+                    </div>
+
+                </div><!--/left-->
+                <!--right-->
+                <div class="col-md-5" id="midCol">
+                    {% for k,v in key1.items() %}
+                        <div class="form-group">
+                            <label>{{ k }}:</label>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} {% if k!=v %}value={{ v }}{% endif %}>
+                        </div>
+                    {% endfor %}
+                </div><!--/middle-->
+                <div class="col-md-5" id="rightCol">
+                    {% for k,v in key2.items() %}
+                        <div class="form-group">
+                            <label>{{ k }}:</label>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} {% if k!=v %}value={{ v }}{% endif %}>
+                        </div>
+                    {% endfor %}
+                </div><!--/right-->
+            </form>
+        </div><!--/row-->
+    </div><!--/container-->
+{% endblock %}

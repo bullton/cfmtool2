@@ -1,6 +1,6 @@
 # encoding = utf-8
 
-from flask import Flask,render_template,url_for,request,redirect,session
+from flask import Flask,render_template,url_for,request,redirect,session,flash
 from werkzeug.utils import secure_filename
 import config
 from models import User, Source, Rule
@@ -43,11 +43,10 @@ def data():
         data = xlrd.open_workbook(source_path)
         table = data.sheets()[0]
         title = table.row_values(0)
-        for rownum in range(1, data.nrows):
-            rowvalue = data.row_values(rownum)
+        for rownum in range(1, table.nrows):
+            rowvalue = table.row_values(rownum)
             single = OrderedDict()
             for colnum in range(0, len(rowvalue)):
-                print(title[colnum], rowvalue[colnum])
                 single[title[colnum]] = rowvalue[colnum]
             convert_list.append(single)
         return render_template('data.html',title=title,table=convert_list)
@@ -94,13 +93,15 @@ def newrule():
 
         rule = Rule.query.filter(Rule.rulename == rulename).first()
         if rule:
-            return 'Rule is already exist, please try another rule name!'
+            flash('Rule is already exist, please try another rule name!','danger')
+            return redirect(url_for('newrule'))
         else:
             rule = Rule(rulename=rulename,customer=customer,release=release,customer_feature_white=customer_feature_white, customer_feature_black=customer_feature_black, customer_top_fault=customer_top_fault, customer_care_function=customer_care_function, uuf_filter=uuf_filter, uuf_exclusion=uuf_exclusion, kpi_filter=kpi_filter, kpi_exclusion=kpi_exclusion, ca_filter=ca_filter, ca_exclusion=ca_exclusion, oamstab_filter=oamstab_filter, oamstab_exclusion=oamstab_exclusion, pet_filter=pet_filter, pet_exclusion=pet_exclusion, func_filter=func_filter, func_exclusion=func_exclusion, category_search_field=category_search_field, category_tag=category_tag, customer_rru=customer_rru, customer_bbu=customer_bbu, customer_keyword_white=customer_keyword_white, customer_keyword_black=customer_keyword_black, customer_pronto_white=customer_pronto_white, customer_pronto_black=customer_pronto_black, r4bbu=r4bbu, r3bbu=r3bbu, ftcomsc=ftcomsc)
             user = User.query.filter(User.id == user_id).first()
             rule.owner = user
             db.session.add(rule)
             db.session.commit()
+            flash('Rule is already sucessfully added!', 'success')
             return redirect(url_for('newrule'))
 
 
@@ -149,9 +150,8 @@ def editrule():
         if rule:
             checkrulename = Rule.query.filter(Rule.rulename == rulename).first()
             if checkrulename and checkrulename.id != int(id):
-                print checkrulename.id, type(checkrulename.id)
-                print id,type(id)
-                return 'rulename exist'
+                flash('Rule name could not be duplicated!', 'danger')
+                return redirect(url_for('editrule'))
             else:
                 rule.rulename = rulename
                 rule.release = release
@@ -192,6 +192,7 @@ def editrule():
                 for k in rulekey2.keys():
                     key2[k] = vars(rule)[k]
                 # return redirect(url_for('editrule'))
+                flash('Rule is already sucessfully edited!', 'success')
                 return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=id, rule=rule)
 
 
@@ -242,7 +243,11 @@ def delrule():
             db.session.delete(rule)
             db.session.commit()
             userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+            flash('Rule is already sucessfully deleted!', 'success')
             return render_template('delrule.html',key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
+        else:
+            flash('Rule is not exist!', 'danger')
+            return redirect(url_for('editrule'))
 
 
 @app.route('/delrule/ref/',methods=['GET','POST'])
@@ -271,9 +276,11 @@ def login():
         if user:
             session['user_id'] = user.id
             session.permanent = True
+            flash('You were successfully logged in')
             return redirect(url_for('index'))
         else:
-            return 'username or password is wrong'
+            error = 'Invalid credentials'
+            return render_template('login.html', error=error)
 
 
 @app.route('/register/',methods=['GET','POST'])
@@ -288,14 +295,17 @@ def register():
 
         user = User.query.filter(User.email == email).first()
         if user:
-            return 'email is already registered'
+            flash('email is already registered!', 'danger')
+            return redirect(url_for('register'))
         else:
             if password1 != password2:
-                return 'Please confirm password!'
+                flash('Please confirm password!', 'danger')
+                return redirect(url_for('register'))
             else:
                 user = User(email=email, username=username, password=password1)
                 db.session.add(user)
                 db.session.commit()
+                flash('Congratulations! You have successfully signed up! ', 'success')
                 return redirect(url_for('login'))
 
 

@@ -8,7 +8,7 @@
 
 {% block main %}
     <div class="form-container">
-        <div class="row pre-scrollable">
+        <div class="row pre" style="overflow-y:auto; overflow-x:auto; width:1124px; height:700px;">
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -20,18 +20,14 @@
                 <tbody>
                     {% for row in table %}
                         <tr>
-                            <th scope="row">{{ row[0]['Problem ID'] }}</th>
-                            {% for col in row %}
-                                <td>{{ col['Title'] }}</td>
+                            <th scope="row">{{ row['Problem ID'] }}</th>
+                            {% for i in row %}
+                                {% if i != 'Problem ID' %}
+                                    <td>{{ row[i] }}</td>
+                                {% endif %}
                             {% endfor %}
                         </tr>
                     {% endfor %}
-                    <tr>
-                        <th scope="row">1</th>
-                        <td>Mark</td>
-                        <td>Otto</td>
-                        <td>@mdo</td>
-                    </tr>
                 </tbody>
             </table>
         </div>
