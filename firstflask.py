@@ -4,6 +4,7 @@ from flask import Flask,render_template,url_for,request,redirect,session,flash
 from werkzeug.utils import secure_filename
 import config
 from models import User, Source, Rule
+from static import Static
 from exts import db
 from decorators import login_require
 from sqlalchemy import desc
@@ -37,19 +38,26 @@ def data():
         pass
     else:
         convert_list = []
+        stat = OrderedDict()
         user_id = session.get('user_id')
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
         data = xlrd.open_workbook(source_path)
         table = data.sheets()[0]
-        title = table.row_values(0)
+        tt = table.row_values(0)
+        titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
         for rownum in range(1, table.nrows):
             rowvalue = table.row_values(rownum)
             single = OrderedDict()
             for colnum in range(0, len(rowvalue)):
-                single[title[colnum]] = rowvalue[colnum]
+                single[tt[colnum]] = rowvalue[colnum]
             convert_list.append(single)
-        return render_template('data.html',title=title,table=convert_list)
+        rule = Rule.query.filter(Rule.id == select_rule).first()
+        static = Static(convert_list, rule)
+        stat['PR_ID'] = static.get_pr_id()
+        print stat['PR_ID']
+        stat['CustomerImpact'] = static.iscustomerpr()
+        return render_template('data.html',stat=stat)
 
 
 @app.route('/newrule/',methods=['GET','POST'])

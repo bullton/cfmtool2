@@ -12,18 +12,18 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        {% for tt in title %}
-                            <th>{{ tt }}</th>
+                        {% for k in stat.iterkeys() %}
+                            <th>{{ k }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for row in table %}
+                    {% for i in stat.values()[0] %}
                         <tr>
-                            <th scope="row">{{ row['Problem ID'] }}</th>
-                            {% for i in row %}
-                                {% if i != 'Problem ID' %}
-                                    <td>{{ row[i] }}</td>
+                            <th scope="row">{{ i }}</th>
+                            {% for k,v in stat.items() %}
+                                {% if k!='PR_ID' %}
+                                    <td>{{ v[stat.values()[0].index(i)] }}</td>
                                 {% endif %}
                             {% endfor %}
                         </tr>
