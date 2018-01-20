@@ -10,7 +10,8 @@ from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
 import os, datetime, platform, xlrd
-
+import pandas as pd
+import numpy as np
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -38,25 +39,28 @@ def data():
         pass
     else:
         convert_list = []
-        stat = OrderedDict()
+        # stat = OrderedDict()
         user_id = session.get('user_id')
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
-        data = xlrd.open_workbook(source_path)
-        table = data.sheets()[0]
-        tt = table.row_values(0)
+        # data = xlrd.open_workbook(source_path)
+        data = pd.read_excel(source_path)
+        # table = data.sheets()[0]
+        # tt = table.row_values(0)
         titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
-        for rownum in range(1, table.nrows):
-            rowvalue = table.row_values(rownum)
-            single = OrderedDict()
-            for colnum in range(0, len(rowvalue)):
-                single[tt[colnum]] = rowvalue[colnum]
-            convert_list.append(single)
+        stat = pd.DataFrame(columns=titles)
+        # for rownum in range(1, table.nrows):
+        #     rowvalue = table.row_values(rownum)
+        #     single = OrderedDict()
+        #     for colnum in range(0, len(rowvalue)):
+        #         single[tt[colnum]] = rowvalue[colnum]
+        #     convert_list.append(single)
         rule = Rule.query.filter(Rule.id == select_rule).first()
-        static = Static(convert_list, rule)
-        stat['PR_ID'] = static.get_pr_id()
-        print stat['PR_ID']
-        stat['CustomerImpact'] = static.iscustomerpr()
+        static = Static(data, rule)
+        # stat['PR_ID'] = static.get_pr_id()
+        stat = static.static()
+        print stat
+        # stat['CustomerImpact'] = static.iscustomerpr()
         return render_template('data.html',stat=stat)
 
 

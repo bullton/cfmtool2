@@ -6,27 +6,29 @@
 :maintainer: None
 :contact: None
 """
-
+import pandas as pd
+import numpy as np
 
 class Static:
     def __init__(self, source, rule):
         self.source = source
         self.rule = rule
+        titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
+        self.result=pd.DataFrame(columns=titles)
+        print self.rule
 
     def get_pr_id(self):
-        pr_id=[]
-        for row in self.source:
-            pr_id.append(row['Problem ID'])
-        return pr_id
+        return self.source['Problem ID']
 
-    def search(self, areas, which_rule):
+    def search(self, areas, which_rule, title):
         result = False
-        result_list = []
+        result_list=[]
         keywords = which_rule.split(',')
-        for row in self.source:
+        for index, row in self.source.iterrows():
             for area in areas:
                 for kw in keywords:
                     if kw in row[area]:
+                        print 'kw=',kw,'row=',row[area]
                         result = True
                         break
                 if result:
@@ -36,4 +38,12 @@ class Static:
         return result_list
 
     def iscustomerpr(self):
-        return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white)
+        return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white, 'PR_ID')
+
+    def get_bbu(self):
+        return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white, 'BBU')
+
+    def static(self):
+        self.result['PR_ID']=self.get_pr_id()
+        self.result['CustomerImpact']=self.iscustomerpr()
+        return self.result
