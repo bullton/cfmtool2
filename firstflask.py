@@ -331,7 +331,8 @@ def logout():
 def upload():
     uf = request.files['input-b1']
     filename = secure_filename(uf.filename)
-    currentpath = os.path.dirname(__file__)
+    currentpath = os.path.abspath(os.path.dirname(__file__))
+    # currentpath = os.path.dirname(__file__)
     ossep = os.path.sep
     savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
     uf.save(savepath)
