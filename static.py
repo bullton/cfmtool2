@@ -8,6 +8,7 @@
 """
 import pandas as pd
 import numpy as np
+import datetime
 
 class Static:
     def __init__(self, source, rule):
@@ -22,14 +23,14 @@ class Static:
 
     def search(self, areas, which_rule, title):
         result = False
-        result_list=[]
+        result_list = []
         keywords = which_rule.split(',')
         for index, row in self.source.iterrows():
             for area in areas:
                 for kw in keywords:
-                    row_area=row[area]
-                    if type(row_area)==float:
-                        row_area=str(row_area)
+                    row_area = row[area]
+                    if type(row_area) == float:
+                        row_area = str(row_area)
                     else:
                         pass
                     if kw in row_area:
@@ -45,8 +46,8 @@ class Static:
         return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white, 'PR_ID')
 
     def get_bbu(self):
-        bbutype=[]
-        bbutypelist=[]
+        bbutype = []
+        bbutypelist = []
         r4result = self.search(['Test Subphase','Title','Description'],self.rule.r4bbu, 'BBU')
         r3result = self.search(['Test Subphase','Title','Description'],self.rule.r3bbu, 'BBU')
         for i in range(len(r4result)):
@@ -62,8 +63,25 @@ class Static:
             bbutypelist[:]=[]
         return bbutype
 
+    def get_cw(self):
+        rpcw_list = []
+        clcw_list = []
+        for index, row in self.source.iterrows():
+            rpcw_list.append(str(row['Reported Date'].year) + '_CW' + str(row['Reported Date'].weekofyear))
+            if row['State'] == 'Closed':
+                close_day = row['State Changed to Closed']
+                if type(close_day) == datetime.datetime:
+                    clcw_list.append(str(pd.Timestamp(close_day).year) + '_CW' + str(pd.Timestamp(close_day).weekofyear))
+                else:
+                    clcw_list.append(
+                        str(close_day.year) + '_CW' + str(close_day.weekofyear))
+            else:
+                clcw_list.append(np.nan)
+        return rpcw_list,clcw_list
+
     def static(self):
-        self.result['PR_ID']=self.get_pr_id()
-        self.result['CustomerImpact']=self.iscustomerpr()
-        self.result['BBU']=self.get_bbu()
+        self.result['PR_ID'] = self.get_pr_id()
+        self.result['CustomerImpact'] = self.iscustomerpr()
+        self.result['BBU'] = self.get_bbu()
+        self.result['ReportCW'],self.result['CloseCW'] = self.get_cw()
         return self.result
