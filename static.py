@@ -15,7 +15,7 @@ class Static:
         self.rule = rule
         titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
         self.result=pd.DataFrame(columns=titles)
-        print self.rule
+        # print self.source
 
     def get_pr_id(self):
         return self.source['Problem ID']
@@ -27,8 +27,12 @@ class Static:
         for index, row in self.source.iterrows():
             for area in areas:
                 for kw in keywords:
-                    if kw in row[area]:
-                        print 'kw=',kw,'row=',row[area]
+                    row_area=row[area]
+                    if type(row_area)==float:
+                        row_area=str(row_area)
+                    else:
+                        pass
+                    if kw in row_area:
                         result = True
                         break
                 if result:
@@ -41,9 +45,25 @@ class Static:
         return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white, 'PR_ID')
 
     def get_bbu(self):
-        return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white, 'BBU')
+        bbutype=[]
+        bbutypelist=[]
+        r4result = self.search(['Test Subphase','Title','Description'],self.rule.r4bbu, 'BBU')
+        r3result = self.search(['Test Subphase','Title','Description'],self.rule.r3bbu, 'BBU')
+        for i in range(len(r4result)):
+            if r4result[i]:
+                bbutypelist.append('Airscale')
+            if r3result[i]:
+                bbutypelist.append('FSMF')
+            if bbutypelist:
+                pass
+            else:
+                bbutypelist.append('OTHERS')
+            bbutype.append(','.join(bbutypelist))
+            bbutypelist[:]=[]
+        return bbutype
 
     def static(self):
         self.result['PR_ID']=self.get_pr_id()
         self.result['CustomerImpact']=self.iscustomerpr()
+        self.result['BBU']=self.get_bbu()
         return self.result

@@ -59,7 +59,6 @@ def data():
         static = Static(data, rule)
         # stat['PR_ID'] = static.get_pr_id()
         stat = static.static()
-        print stat
         # stat['CustomerImpact'] = static.iscustomerpr()
         return render_template('data.html',stat=stat)
 
