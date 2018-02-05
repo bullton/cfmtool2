@@ -130,6 +130,25 @@ class Static:
             severity_list.append(row['Severity'])
         return release_list,severity_list
 
+    def duplicated(self):
+        result_list = []
+        fault_data = self.source['Fault ID']
+        result_bin = fault_data.duplicated()
+        for index, result in enumerate(result_bin):
+            if result:
+                result_list.append(np.nan)
+            else:
+                fid = self.source['Fault ID'][index]
+                pid = self.source['Problem ID'][index]
+                duplicatedfault = []
+                for index, row in self.source.iterrows():
+                    if row['Fault ID'] == fid and row['Problem ID'] != pid:
+                        duplicatedfault.append(row['Problem ID'])
+                if duplicatedfault:
+                    result_list.append(','.join(duplicatedfault))
+                else:
+                    result_list.append(np.nan)
+        return result_bin, result_list
 
     def static(self):
         self.result['PR_ID'] = self.get_pr_id()
@@ -140,4 +159,5 @@ class Static:
         self.result['ReportCW'],self.result['CloseCW'],self.result['Opendays'] = self.get_cw()
         self.result['Top'] = self.is_top()
         self.result['Release'],self.result['Severity'] = self.get_release_severity()
+        self.result['Duplicated'],self.result['AttachPR'] = self.duplicated()
         return self.result
