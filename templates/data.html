@@ -4,11 +4,8 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static',filename='css/data.css') }}">
-    <script>
-        $('#myModal').on('shown.bs.modal', function () {
-            $('#myInput').focus()
-        })
-    </script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='js/jquery-3.3.1.min.js') }}">
+
 {% endblock %}
 
 {% block main %}

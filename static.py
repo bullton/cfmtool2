@@ -150,6 +150,71 @@ class Static:
                     result_list.append(np.nan)
         return result_bin, result_list
 
+    def crosscount_teststat(self):
+        cross_list = []
+        teststat_list = []
+        for index, row in self.source.iterrows():
+            release = row['Release']
+            target_release = row['Target Release']
+            if 'FL' in target_release and 'TL' in target_release:
+                cross_list.append('FT')
+                teststat_list_temp = []
+                for index, trelease in enumerate(target_release.split(',')):
+                    if trelease[0:1] == release[0:1]:
+                        teststat = row['Correction State'].split(',')[index]
+                        if teststat == "Testing Not Needed" or teststat == "Needless" or teststat == "Tested":
+                            teststat_list_temp.append(trelease[0:1])
+                if teststat_list_temp:
+                    teststat_list.append(''.join(teststat_list_temp))
+                else:
+                    teststat_list.append(np.nan)
+            elif row['Group in Charge'] in self.rule.ftcomsc:
+                cross_list.append('FT')
+                teststat_list_temp = []
+                for index, trelease in enumerate(target_release.split(',')):
+                    if trelease[0:1] == release[0:1]:
+                        teststat = row['Correction State'].split(',')[index]
+                        if teststat == "Testing Not Needed" or teststat == "Needless" or teststat == "Tested":
+                            teststat_list_temp.append(trelease[0:1])
+                if teststat_list_temp:
+                    teststat_list.append(''.join(teststat_list_temp))
+                else:
+                    teststat_list.append(np.nan)
+            elif 'TL' in target_release:
+                cross_list.append('T')
+                teststat_list_temp = []
+                for index, trelease in enumerate(target_release.split(',')):
+                    if 'T' in release:
+                        teststat = row['Correction State'].split(',')[index]
+                        if teststat == "Testing Not Needed" or teststat == "Needless" or teststat == "Tested":
+                            teststat_list_temp.append('T')
+                if teststat_list_temp:
+                    teststat_list.append(''.join(teststat_list_temp))
+                else:
+                    teststat_list.append(np.nan)
+            elif 'FL' in target_release:
+                cross_list.append('F')
+                print target_release
+                teststat_list_temp = []
+                for index, trelease in enumerate(target_release.split(',')):
+                    if 'F' in release:
+                        print index
+                        print row['Correction State']
+                        teststat = row['Correction State'].split(',')[index]
+                        if teststat == "Testing Not Needed" or teststat == "Needless" or teststat == "Tested":
+                            teststat_list_temp.append('F')
+                if teststat_list_temp:
+                    teststat_list.append(''.join(teststat_list_temp))
+                else:
+                    teststat_list.append(np.nan)
+            else:
+                cross_list.append(np.nan)
+                teststat_list.append(np.nan)
+        print 'len_cross=', len(cross_list), 'len_test=',len(teststat_list)
+        return cross_list, teststat_list
+
+
+
     def static(self):
         self.result['PR_ID'] = self.get_pr_id()
         self.result['CustomerImpact'] = self.iscustomerpr()
@@ -160,4 +225,5 @@ class Static:
         self.result['Top'] = self.is_top()
         self.result['Release'],self.result['Severity'] = self.get_release_severity()
         self.result['Duplicated'],self.result['AttachPR'] = self.duplicated()
+        self.result['CrossCount'],self.result['TestState'] = self.crosscount_teststat()
         return self.result
