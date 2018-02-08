@@ -1,5 +1,7 @@
-# encoding = utf-8
+# -*- coding: utf-8 -*
+from _mysql import DataError
 
+import _mysql_exceptions
 from flask import Flask,render_template,url_for,request,redirect,session,flash
 from werkzeug.utils import secure_filename
 import config
@@ -9,9 +11,8 @@ from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform, xlrd
-import pandas as pd
-import numpy as np
+import os, datetime, platform, xlrd,re
+
 
 app = Flask(__name__)
 app.config.from_object(config)
@@ -39,27 +40,25 @@ def data():
         pass
     else:
         convert_list = []
-        # stat = OrderedDict()
+        stat = OrderedDict()
         user_id = session.get('user_id')
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
-        # data = xlrd.open_workbook(source_path)
-        data = pd.read_excel(source_path)
-        # table = data.sheets()[0]
-        # tt = table.row_values(0)
+        data = xlrd.open_workbook(source_path)
+        table = data.sheets()[0]
+        tt = table.row_values(0)
         titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
-        stat = pd.DataFrame(columns=titles)
-        # for rownum in range(1, table.nrows):
-        #     rowvalue = table.row_values(rownum)
-        #     single = OrderedDict()
-        #     for colnum in range(0, len(rowvalue)):
-        #         single[tt[colnum]] = rowvalue[colnum]
-        #     convert_list.append(single)
+        for rownum in range(1, table.nrows):
+            rowvalue = table.row_values(rownum)
+            single = OrderedDict()
+            for colnum in range(0, len(rowvalue)):
+                single[tt[colnum]] = rowvalue[colnum]
+            convert_list.append(single)
         rule = Rule.query.filter(Rule.id == select_rule).first()
-        static = Static(data, rule)
-        # stat['PR_ID'] = static.get_pr_id()
-        stat = static.static()
-        # stat['CustomerImpact'] = static.iscustomerpr()
+        static = Static(convert_list, rule)
+        stat['PR_ID'] = static.get_pr_id()
+        print stat['PR_ID']
+        stat['CustomerImpact'] = static.iscustomerpr()
         return render_template('data.html',stat=stat)
 
 
@@ -325,25 +324,48 @@ def logout():
     session.clear()
     return redirect(url_for('index'))
 
+################################################update from simon#####################################################
+
+ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])                   #设置文件格式要求
+
+def allowed_file(filename):                                  #文件格式判断函数
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/upload/', methods = ['POST'])
 def upload():
     uf = request.files['input-b1']
-    filename = secure_filename(uf.filename)
-    currentpath = os.path.abspath(os.path.dirname(__file__))
-    # currentpath = os.path.dirname(__file__)
-    ossep = os.path.sep
-    savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
-    uf.save(savepath)
-    # update db
-    source = Source(path=savepath,filename=filename)
-    user_id = session.get('user_id')
-    user = User.query.filter(User.id == user_id).first()
-    source.owner = user
-    db.session.add(source)
-    db.session.commit()
-    return redirect(url_for('index'))
+    if uf and allowed_file(uf.filename):                        #调取文件格式判断函数
+        size = len(uf.read())                                   #测量文件大小
+        if size<51200000:                                       #文件大小判断，50m=51200000bit
+            filename = secure_filename(uf.filename)
+            currentpath = os.path.dirname(__file__)
+            ossep = os.path.sep
+            savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
+            uf.save(savepath)
+            source = Source(path=savepath,filename=filename)
+            user_id = session.get('user_id')
+            user = User.query.filter(User.id == user_id).first()
+            source.owner = user
+            try:                                                #上传出现错误try函数，失败返回信息
+                db.session.add(source)
+                db.session.commit()
+            except Exception as reason:
+                s=str(reason)                                    #reason赋值给str类型s
+                list = re.split(r'[()]+', s)                    #正则表达式 判断（）内的内容，并且赋值list为表,import re
+                flash(u'上传失败：(%s)(%%s)'%list[1]%list[3])
+                return redirect(url_for('index'))
+            else:
+                flash(u'上传成功')
+                return redirect(url_for('index'))
+        else:
+            flash(u'error:文件大小限制在50M')
+            return redirect(url_for('index'))
+    else:
+        flash(u'error:未使用xls,xlsx格式文件上传')
+        return redirect(url_for('index'))
 
+################################################update from simon#####################################################
 
 @app.context_processor
 def my_context_processor():
@@ -356,4 +378,4 @@ def my_context_processor():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=8080)
+    app.run()
