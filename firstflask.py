@@ -1,4 +1,4 @@
-# encoding = utf-8
+# -*- coding: utf-8 -*
 
 from flask import Flask,render_template,url_for,request,redirect,session,flash
 from werkzeug.utils import secure_filename
@@ -9,13 +9,21 @@ from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform, xlrd
+import os, datetime, platform, re
 import pandas as pd
 import numpy as np
+from _mysql import DataError
+import _mysql_exceptions
 
 app = Flask(__name__)
 app.config.from_object(config)
 db.init_app(app)
+
+ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])                
+
+def allowed_file(filename):                                  
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
@@ -39,27 +47,15 @@ def data():
         pass
     else:
         convert_list = []
-        # stat = OrderedDict()
         user_id = session.get('user_id')
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
-        # data = xlrd.open_workbook(source_path)
         data = pd.read_excel(source_path)
-        # table = data.sheets()[0]
-        # tt = table.row_values(0)
         titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
         stat = pd.DataFrame(columns=titles)
-        # for rownum in range(1, table.nrows):
-        #     rowvalue = table.row_values(rownum)
-        #     single = OrderedDict()
-        #     for colnum in range(0, len(rowvalue)):
-        #         single[tt[colnum]] = rowvalue[colnum]
-        #     convert_list.append(single)
         rule = Rule.query.filter(Rule.id == select_rule).first()
         static = Static(data, rule)
-        # stat['PR_ID'] = static.get_pr_id()
         stat = static.static()
-        # stat['CustomerImpact'] = static.iscustomerpr()
         return render_template('data.html',stat=stat)
 
 
@@ -329,21 +325,35 @@ def logout():
 @app.route('/upload/', methods = ['POST'])
 def upload():
     uf = request.files['input-b1']
-    filename = secure_filename(uf.filename)
-    currentpath = os.path.abspath(os.path.dirname(__file__))
-    # currentpath = os.path.dirname(__file__)
-    ossep = os.path.sep
-    savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
-    uf.save(savepath)
-    # update db
-    source = Source(path=savepath,filename=filename)
-    user_id = session.get('user_id')
-    user = User.query.filter(User.id == user_id).first()
-    source.owner = user
-    db.session.add(source)
-    db.session.commit()
-    return redirect(url_for('index'))
-
+    if uf and allowed_file(uf.filename):                       
+        size = len(uf.read())                               
+        if size<51200000:          
+            filename = secure_filename(uf.filename)
+            currentpath = os.path.dirname(__file__)
+            ossep = os.path.sep
+            savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
+            uf.save(savepath)
+            source = Source(path=savepath,filename=filename)
+            user_id = session.get('user_id')
+            user = User.query.filter(User.id == user_id).first()
+            source.owner = user
+            try:                                                
+                db.session.add(source)
+                db.session.commit()
+            except Exception as reason:
+                s=str(reason)                                    
+                list = re.split(r'[()]+', s)                    
+                flash(u'Upload Failed：(%s)(%%s)'%list[1]%list[3])
+                return redirect(url_for('index'))
+            else:
+                flash(u'Upload Succ')
+                return redirect(url_for('index'))
+        else:
+            flash(u'error:File size should less than 50M')
+            return redirect(url_for('index'))
+    else:
+        flash(u'error:File type should be xls or xlsx')
+        return redirect(url_for('index'))
 
 @app.context_processor
 def my_context_processor():
