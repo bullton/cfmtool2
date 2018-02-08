@@ -329,7 +329,7 @@ def upload():
         size = len(uf.read())                               
         if size<51200000:          
             filename = secure_filename(uf.filename)
-            currentpath = os.path.dirname(__file__)
+            currentpath = os.path.abspath(os.path.dirname(__file__))
             ossep = os.path.sep
             savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
             uf.save(savepath)
