@@ -1,6 +1,6 @@
 # encoding = utf-8
 import os
-basedir = os.path.abspath(os.path.dirname(__file__))
+
 
 DEBUG = True
 
@@ -14,4 +14,6 @@ PASSWORD = 'root'
 DB_URI = 'mysql+mysqldb://{}:{}@{}:{}/{}?charset=utf8'.format(USERNAME,PASSWORD,HOSTNAME,PORT,DATABASE)
 SQLALCHEMY_DATABASE_URI = DB_URI
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
 

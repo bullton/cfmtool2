@@ -9,7 +9,7 @@ from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform, re
+import os, datetime, platform, re, xlrd, time
 import pandas as pd
 import numpy as np
 from _mysql import DataError
@@ -17,9 +17,14 @@ import _mysql_exceptions
 
 app = Flask(__name__)
 app.config.from_object(config)
+# fileupload config
+UPLOAD_FOLDER='uploadfolder'
+ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])      
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+basedir = os.path.abspath(os.path.dirname(__file__))
 db.init_app(app)
 
-ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])                
+
 
 def allowed_file(filename):                                  
     return '.' in filename and \
@@ -322,18 +327,29 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/upload/', methods = ['POST'])
+@app.route('/upload/', methods = ['POST'],strict_slashes=False)
 def upload():
     uf = request.files['input-b1']
+    file_dir=os.path.join(basedir,app.config['UPLOAD_FOLDER'])
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
     if uf and allowed_file(uf.filename):                       
-        size = len(uf.read())                               
+        # size = len(uf.read())
+        size = 1                               
         if size<51200000:          
             filename = secure_filename(uf.filename)
-            currentpath = os.path.abspath(os.path.dirname(__file__))
-            ossep = os.path.sep
-            savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
+            print 'filename=',filename
+            # currentpath = os.path.abspath(os.path.dirname(__file__))
+            # ossep = os.path.sep
+            ext = filename.rsplit('.',1)[1]
+            name = filename.rsplit('.',1)[0]
+            unix_time = int(time.time())
+            new_filename=name + '_' + str(unix_time)+'.'+ext
+            # savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
+            savepath = os.path.join(file_dir,new_filename)
+            # uf.save(savepath)
             uf.save(savepath)
-            source = Source(path=savepath,filename=filename)
+            source = Source(path=savepath,filename=new_filename)
             user_id = session.get('user_id')
             user = User.query.filter(User.id == user_id).first()
             source.owner = user
