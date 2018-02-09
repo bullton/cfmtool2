@@ -8,7 +8,7 @@
 """
 import pandas as pd
 import numpy as np
-import datetime
+import datetime, time
 
 class Static:
     def __init__(self, source, rule):
@@ -16,7 +16,6 @@ class Static:
         self.rule = rule
         titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
         self.result=pd.DataFrame(columns=titles)
-        # print self.source
 
     def get_pr_id(self):
         return self.source['Problem ID']
@@ -71,7 +70,6 @@ class Static:
             rruresult = self.search(['Test Subphase','Title','Description'],rru)
             for i in range(len(rruresult)):
                 if rruresult[i]:
-                    print rru
                     rrutype[i].append(rru)
         for i in range(len(self.source)):
             if rrutype[i]:
@@ -99,24 +97,36 @@ class Static:
                 cate_list[i] = np.nan
         return cate_list
 
+    def to_date_time(self, date_time):
+        if date_time and date_time != '< empty >':
+            if type(date_time) == datetime.datetime:
+                return time.strftime('%Y-%m-%d %H:%M:%S',date_time)
+            elif type(date_time) == unicode:
+                return time.strftime('%Y-%m-%d %H:%M:%S',time.strptime(date_time.encode("utf-8"), '%d.%m.%Y'))
+            elif type(date_time) == str:
+                return time.strftime('%Y-%m-%d %H:%M:%S',time.strptime(date_time,'%d.%m.%Y'))
+        else:
+            return date_time  #Null
+
+
     def get_cw(self):
         rpcw_list = []
         clcw_list = []
         open_list=[]
         for index, row in self.source.iterrows():
             report_day = row['Reported Date']
-            rpcw_list.append(str(row['Reported Date'].year) + '_CW' + str(row['Reported Date'].weekofyear))
+            close_day = row['State Changed to Closed']
+            rpcw_list.append(str(pd.Timestamp(self.to_date_time(report_day)).year) + '_CW' + str(pd.Timestamp(self.to_date_time(report_day)).weekofyear))
             if row['State'] == 'Closed':
-                close_day = row['State Changed to Closed']
-                if type(close_day) == datetime.datetime:
-                    clcw_list.append(str(pd.Timestamp(close_day).year) + '_CW' + str(pd.Timestamp(close_day).weekofyear))
-                    open_list.append((close_day - pd.to_datetime(report_day)).days)
-                else:
-                    clcw_list.append(str(close_day.year) + '_CW' + str(close_day.weekofyear))
-                    open_list.append((pd.to_datetime(close_day) - pd.to_datetime(report_day)).days)
+                print 'dddd=',self.to_date_time(close_day),index
+                print 'cccc=',self.to_date_time(close_day),index
+                clcw_list.append(str(pd.Timestamp(self.to_date_time(close_day)).year) + '_CW' + str(pd.Timestamp(self.to_date_time(close_day)).weekofyear))
+                cd = self.to_date_time(close_day)
+                rd = self.to_date_time(report_day)
+                open_list.append((pd.to_datetime(cd) - pd.to_datetime(rd)).days)
             else:
                 clcw_list.append(np.nan)
-                open_list.append((datetime.datetime.now() - pd.to_datetime(report_day)).days)
+                open_list.append((datetime.datetime.now() - pd.to_datetime(rd)).days)
         return rpcw_list,clcw_list,open_list
 
     def is_top(self):
@@ -194,12 +204,9 @@ class Static:
                     teststat_list.append(np.nan)
             elif 'FL' in target_release:
                 cross_list.append('F')
-                print target_release
                 teststat_list_temp = []
                 for index, trelease in enumerate(target_release.split(',')):
                     if 'F' in release:
-                        print index
-                        print row['Correction State']
                         teststat = row['Correction State'].split(',')[index]
                         if teststat == "Testing Not Needed" or teststat == "Needless" or teststat == "Tested":
                             teststat_list_temp.append('F')
@@ -210,7 +217,6 @@ class Static:
             else:
                 cross_list.append(np.nan)
                 teststat_list.append(np.nan)
-        print 'len_cross=', len(cross_list), 'len_test=',len(teststat_list)
         return cross_list, teststat_list
 
 
