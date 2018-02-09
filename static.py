@@ -100,11 +100,13 @@ class Static:
     def to_date_time(self, date_time):
         if date_time and date_time != '< empty >':
             if type(date_time) == datetime.datetime:
-                return time.strftime('%Y-%m-%d %H:%M:%S',date_time)
+                return time.strftime('%Y-%m-%d %H:%M:%S',date_time.timetuple())
             elif type(date_time) == unicode:
                 return time.strftime('%Y-%m-%d %H:%M:%S',time.strptime(date_time.encode("utf-8"), '%d.%m.%Y'))
             elif type(date_time) == str:
                 return time.strftime('%Y-%m-%d %H:%M:%S',time.strptime(date_time,'%d.%m.%Y'))
+            else:
+                return str(date_time)
         else:
             return date_time  #Null
 
@@ -115,15 +117,24 @@ class Static:
         open_list=[]
         for index, row in self.source.iterrows():
             report_day = row['Reported Date']
+            print 'rpday=',report_day,index, type(report_day)
             close_day = row['State Changed to Closed']
+            print 'cday=', close_day, index, type(close_day)
             rpcw_list.append(str(pd.Timestamp(self.to_date_time(report_day)).year) + '_CW' + str(pd.Timestamp(self.to_date_time(report_day)).weekofyear))
             if row['State'] == 'Closed':
-                print 'dddd=',self.to_date_time(close_day),index
+                print 'rrrr=',self.to_date_time(report_day),index
                 print 'cccc=',self.to_date_time(close_day),index
-                clcw_list.append(str(pd.Timestamp(self.to_date_time(close_day)).year) + '_CW' + str(pd.Timestamp(self.to_date_time(close_day)).weekofyear))
+
                 cd = self.to_date_time(close_day)
                 rd = self.to_date_time(report_day)
-                open_list.append((pd.to_datetime(cd) - pd.to_datetime(rd)).days)
+                print 'cd,rd = ',cd,rd,index
+                if cd:
+                    clcw_list.append(str(pd.Timestamp(self.to_date_time(close_day)).year) + '_CW' + str(
+                        pd.Timestamp(self.to_date_time(close_day)).weekofyear))
+                    open_list.append((pd.to_datetime(cd) - pd.to_datetime(rd)).days)
+                else:
+                    clcw_list.append(np.nan)
+                    open_list.append((datetime.datetime.now() - pd.to_datetime(rd)).days)
             else:
                 clcw_list.append(np.nan)
                 open_list.append((datetime.datetime.now() - pd.to_datetime(rd)).days)
