@@ -108,7 +108,7 @@ class Static:
             else:
                 return str(date_time)
         else:
-            return date_time  #Null
+            return np.nan  #Null
 
 
     def get_cw(self):
@@ -117,17 +117,11 @@ class Static:
         open_list=[]
         for index, row in self.source.iterrows():
             report_day = row['Reported Date']
-            print 'rpday=',report_day,index, type(report_day)
             close_day = row['State Changed to Closed']
-            print 'cday=', close_day, index, type(close_day)
             rpcw_list.append(str(pd.Timestamp(self.to_date_time(report_day)).year) + '_CW' + str(pd.Timestamp(self.to_date_time(report_day)).weekofyear))
-            if row['State'] == 'Closed':
-                print 'rrrr=',self.to_date_time(report_day),index
-                print 'cccc=',self.to_date_time(close_day),index
-
+            if row['State'] == 'Closed' and self.to_date_time(close_day):
                 cd = self.to_date_time(close_day)
                 rd = self.to_date_time(report_day)
-                print 'cd,rd = ',cd,rd,index
                 if cd:
                     clcw_list.append(str(pd.Timestamp(self.to_date_time(close_day)).year) + '_CW' + str(
                         pd.Timestamp(self.to_date_time(close_day)).weekofyear))
@@ -156,19 +150,20 @@ class Static:
         fault_data = self.source['Fault ID']
         result_bin = fault_data.duplicated()
         for index, result in enumerate(result_bin):
-            if result:
-                result_list.append(np.nan)
-            else:
-                fid = self.source['Fault ID'][index]
-                pid = self.source['Problem ID'][index]
-                duplicatedfault = []
-                for index, row in self.source.iterrows():
-                    if row['Fault ID'] == fid and row['Problem ID'] != pid:
-                        duplicatedfault.append(row['Problem ID'])
-                if duplicatedfault:
-                    result_list.append(','.join(duplicatedfault))
-                else:
-                    result_list.append(np.nan)
+        #     print 'duindex=',index
+        #     if result:
+            result_list.append(np.nan)
+        #     else:
+        #         fid = self.source['Fault ID'][index]
+        #         pid = self.source['Problem ID'][index]
+        #         duplicatedfault = []
+        #         for index, row in self.source.iterrows():
+        #             if row['Fault ID'] == fid and row['Problem ID'] != pid:
+        #                 duplicatedfault.append(row['Problem ID'])
+        #         if duplicatedfault:
+        #             result_list.append(','.join(duplicatedfault))
+        #         else:
+        #             result_list.append(np.nan)
         return result_bin, result_list
 
     def crosscount_teststat(self):
