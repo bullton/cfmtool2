@@ -51,7 +51,6 @@ def data():
     if request.method == 'GET':
         pass
     else:
-        convert_list = []
         user_id = session.get('user_id')
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
@@ -67,11 +66,27 @@ def data():
         static_data.owner = user
         db.session.add(static_data)
         db.session.commit()
-        qqqqq = Static_Data.query.order_by(desc(Static_Data.id)).first()
-        print qqqqq.data
-        ccc = pd.DataFrame(eval(qqqqq.data.replace('nan','np.nan')))
-        print 'ccc=',ccc['PR_ID'][0]
+        # qqqqq = Static_Data.query.order_by(desc(Static_Data.id)).first()
+        # ccc = pd.DataFrame(eval(qqqqq.data.replace('nan','np.nan')))
         return render_template('data.html',stat=stat)
+
+
+@app.route('/statics/')
+@login_require
+def statics():
+    user_id = session.get('user_id')
+    static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
+    data = pd.DataFrame(eval(static_data.data.replace('nan','np.nan')))
+    return render_template('statics.html',stat=data)
+
+
+@app.route('/trend/')
+@login_require
+def trend():
+    user_id = session.get('user_id')
+    static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
+    data = pd.DataFrame(eval(static_data.data.replace('nan','np.nan')))
+    return render_template('trend.html',stat=data)
 
 
 @app.route('/newrule/',methods=['GET','POST'])
