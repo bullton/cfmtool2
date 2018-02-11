@@ -3,7 +3,7 @@
 from flask import Flask,render_template,url_for,request,redirect,session,flash
 from werkzeug.utils import secure_filename
 import config
-from models import User, Source, Rule
+from models import User, Source, Rule, Static_Data
 from static import Static
 from exts import db
 from decorators import login_require
@@ -61,6 +61,16 @@ def data():
         rule = Rule.query.filter(Rule.id == select_rule).first()
         static = Static(data, rule)
         stat = static.static()
+        stat_orderdict = stat.to_dict(into=OrderedDict)
+        static_data = Static_Data(data=str(stat_orderdict))
+        user = User.query.filter(User.id == user_id).first()
+        static_data.owner = user
+        db.session.add(static_data)
+        db.session.commit()
+        qqqqq = Static_Data.query.order_by(desc(Static_Data.id)).first()
+        print qqqqq.data
+        ccc = pd.DataFrame(eval(qqqqq.data.replace('nan','np.nan')))
+        print 'ccc=',ccc['PR_ID'][0]
         return render_template('data.html',stat=stat)
 
 
@@ -338,7 +348,6 @@ def upload():
         size = 1                               
         if size<51200000:          
             filename = secure_filename(uf.filename)
-            print 'filename=',filename
             # currentpath = os.path.abspath(os.path.dirname(__file__))
             # ossep = os.path.sep
             ext = filename.rsplit('.',1)[1]

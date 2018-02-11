@@ -61,3 +61,11 @@ class Rule(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     owner = db.relationship('User', backref=db.backref('rule'))
+
+class Static_Data(db.Model):
+    __tablename__ = 'static_data'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    data = db.Column(db.Text)
+    static_time = db.Column(db.DateTime,default=datetime.now)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner = db.relationship('User', backref=db.backref('static_data'))
