@@ -12,6 +12,7 @@ from collections import OrderedDict
 import os, datetime, platform, re, xlrd, time
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from _mysql import DataError
 import _mysql_exceptions
 
@@ -77,6 +78,25 @@ def statics():
     user_id = session.get('user_id')
     static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
     data = pd.DataFrame(eval(static_data.data.replace('nan','np.nan')))
+    df_fdd_customer_bbu_cate = pd.DataFrame(columns=['FSMF','Airscale','Others','Subtotal','OpenDays'],index=['A - Critical','B - Major','C - Minor'])
+    for index, row in df_fdd_customer_bbu_cate.iterrows():
+        subtotal = 0
+        totaldays = 0
+        for col in df_fdd_customer_bbu_cate.columns:
+            if col in ['FSMF','Airscale','Others']:
+                count = data[(data['CustomerImpact']==True)&(data['BBU']==col)&(data['Severity']==index)].count()['CustomerImpact']
+                df_fdd_customer_bbu_cate[col][index] = count
+                print 'subtotal = ',subtotal, col, index
+                print 'count = ',count, col, index
+                subtotal = subtotal + count
+                print 'subtotal = subtotal + count',subtotal, col, index
+                totaldays = totaldays + 30
+                print 'totaldays = ',totaldays, col, index
+        df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
+        df_fdd_customer_bbu_cate['OpenDays'][index] = totaldays / subtotal
+
+    print df_fdd_customer_bbu_cate
+
     return render_template('statics.html',stat=data)
 
 
