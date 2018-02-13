@@ -56,8 +56,8 @@ def data():
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
         data = pd.read_excel(source_path)
-        titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
-        stat = pd.DataFrame(columns=titles)
+        # titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
+        stat = pd.DataFrame()
         rule = Rule.query.filter(Rule.id == select_rule).first()
         static = Static(data, rule)
         stat = static.static()
@@ -79,6 +79,12 @@ def statics():
     static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
     data = pd.DataFrame(eval(static_data.data.replace('nan','np.nan')))
     df_fdd_customer_bbu_cate = pd.DataFrame(columns=['FSMF','Airscale','Others','Subtotal','OpenDays'],index=['A - Critical','B - Major','C - Minor'])
+    df_tdd_customer_bbu = pd.DataFrame()
+    df_fdd_bbu = pd.DataFrame()
+    df_tdd_bbu = pd.DataFrame()
+    df_top_pr = pd.DataFrame()
+    df_top_blocker = pd.DataFrame()
+    df_dedicate_finding = pd.DataFrame()
     for index, row in df_fdd_customer_bbu_cate.iterrows():
         subtotal = 0
         totaldays = 0

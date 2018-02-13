@@ -14,7 +14,7 @@ class Static:
     def __init__(self, source, rule):
         self.source = source
         self.rule = rule
-        titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release']
+        titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
         self.result=pd.DataFrame(columns=titles)
 
     def get_pr_id(self):
@@ -23,26 +23,67 @@ class Static:
     def search(self, areas, which_rule):
         result = False
         result_list = []
-        keywords = which_rule.split(',')
-        for index, row in self.source.iterrows():
-            for area in areas:
-                for kw in keywords:
-                    row_area = row[area]
-                    if type(row_area) == float:
-                        row_area = str(row_area)
-                    else:
-                        pass
-                    if kw in row_area:
-                        result = True
+        if which_rule:
+            keywords = which_rule.split(',')
+            for index, row in self.source.iterrows():
+                for area in areas:
+                    for kw in keywords:
+                        row_area = row[area]
+                        if type(row_area) == float:
+                            row_area = str(row_area)
+                        else:
+                            pass
+                        if kw in row_area:
+                            result = True
+                            break
+                    if result:
                         break
-                if result:
-                    break
-            result_list.append(result)
-            result = False
+                result_list.append(result)
+                result = False
+        else:
+            result_list = [False] * self.source.iloc[:,0].size
         return result_list
 
-    def iscustomerpr(self):
-        return self.search(['Title','Description','Additional'],self.rule.customer_keyword_white)
+    def is_customer_pr(self):
+        result = pd.DataFrame()
+        result_list = []
+        comments_list = []
+        result['pr_black'] = self.search(['Problem ID'],self.rule.customer_pronto_black)
+        result['pr_white'] = self.search(['Problem ID'],self.rule.customer_pronto_white)
+        result['feature_black'] = self.search(['Title','Description','Feature'],self.rule.customer_feature_black)
+        result['feature_white'] = self.search(['Title','Description','Feature'],self.rule.customer_feature_white)
+        result['kw_black'] = self.search(['Title','Description','Additional'],self.rule.customer_keyword_black)
+        result['kw_white'] = self.search(['Title','Description','Additional'],self.rule.customer_keyword_white)
+        result['customer_top_fault'] = self.search(['Title','Description'],self.rule.customer_top_fault)
+        result['customer_care_func'] = self.search(['Title','Description'],self.rule.customer_care_function)
+        for index, row in result.iterrows():
+            comments = []
+            if row['pr_black'] or row['feature_black'] or row['kw_black']:
+                result_list.append(False)
+                if row['pr_black']:
+                    comments.append('PR black')
+                if row['feature_black']:
+                    comments.append('Feature black')
+                if row['kw_black']:
+                    comments.append('KW black')
+                comments_list.append(','.join(comments))
+            elif row['pr_white'] or row['feature_white'] or row['kw_white'] or row['customer_top_fault'] or row['customer_care_func']:
+                result_list.append(True)
+                if row['pr_white']:
+                    comments.append('PR white')
+                if row['feature_white']:
+                    comments.append('Feature white')
+                if row['kw_white']:
+                    comments.append('KW white')
+                if row['customer_top_fault']:
+                    comments.append('Top fault')
+                if row['customer_care_func']:
+                    comments.append('Customer care func')
+                comments_list.append(','.join(comments))
+            else:
+                result_list.append(False)
+                comments_list.append(np.nan)
+        return result_list, comments_list
 
     def get_bbu(self):
         bbutype = []
@@ -225,11 +266,9 @@ class Static:
                 teststat_list.append(np.nan)
         return cross_list, teststat_list
 
-
-
     def static(self):
         self.result['PR_ID'] = self.get_pr_id()
-        self.result['CustomerImpact'] = self.iscustomerpr()
+        self.result['CustomerImpact'], self.result['Comments'] = self.is_customer_pr()
         self.result['BBU'] = self.get_bbu()
         self.result['RRU'] = self.get_rru()
         self.result['Category'] = self.get_category()
