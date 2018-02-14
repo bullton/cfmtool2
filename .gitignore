@@ -5,3 +5,5 @@ cfmtoolvenv
 migrations
 .DS_Store
 venv
+uploadfolder
+export
