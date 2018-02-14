@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*
 
-from flask import Flask,render_template,url_for,request,redirect,session,flash
+from flask import Flask,render_template,url_for,request,redirect,session,flash, send_file, send_from_directory
 from werkzeug.utils import secure_filename
 import config
 from models import User, Source, Rule, Static_Data
@@ -20,8 +20,10 @@ app = Flask(__name__)
 app.config.from_object(config)
 # fileupload config
 UPLOAD_FOLDER='uploadfolder'
+EXPORT_FOLDER='export'
 ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])      
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['EXPORT_FOLDER'] = EXPORT_FOLDER
 basedir = os.path.abspath(os.path.dirname(__file__))
 db.init_app(app)
 
@@ -92,19 +94,25 @@ def statics():
             if col in ['FSMF','Airscale','Others']:
                 count = data[(data['CustomerImpact']==True)&(data['BBU']==col)&(data['Severity']==index)].count()['CustomerImpact']
                 df_fdd_customer_bbu_cate[col][index] = count
-                print 'subtotal = ',subtotal, col, index
-                print 'count = ',count, col, index
                 subtotal = subtotal + count
-                print 'subtotal = subtotal + count',subtotal, col, index
                 totaldays = totaldays + 30
-                print 'totaldays = ',totaldays, col, index
         df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
         df_fdd_customer_bbu_cate['OpenDays'][index] = totaldays / subtotal
-
-    print df_fdd_customer_bbu_cate
-
     return render_template('statics.html',stat=data)
 
+
+@app.route('/export/')
+@login_require
+def export():
+    user_id = session.get('user_id')
+    static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
+    data = pd.DataFrame(eval(static_data.data.replace('nan', 'np.nan')))
+    export_path = os.path.join(basedir, app.config['EXPORT_FOLDER'])
+    unix_time = int(time.time())
+    filename = str(unix_time) + '.xls'
+    fullpath = os.path.join(export_path,filename)
+    data.to_excel(fullpath)
+    return send_from_directory(export_path, filename, as_attachment=True)
 
 @app.route('/trend/')
 @login_require

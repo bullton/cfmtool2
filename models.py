@@ -3,6 +3,8 @@
 from exts import db
 from datetime import datetime
 
+from sqlalchemy.dialects.mysql import LONGTEXT
+
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -65,7 +67,7 @@ class Rule(db.Model):
 class Static_Data(db.Model):
     __tablename__ = 'static_data'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    data = db.Column(db.Text)
+    data = db.Column(LONGTEXT)
     static_time = db.Column(db.DateTime,default=datetime.now)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     owner = db.relationship('User', backref=db.backref('static_data'))

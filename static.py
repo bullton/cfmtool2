@@ -29,7 +29,7 @@ class Static:
                 for area in areas:
                     for kw in keywords:
                         row_area = row[area]
-                        if type(row_area) == float:
+                        if type(row_area) == float or type(row_area) == int:
                             row_area = str(row_area)
                         else:
                             pass
