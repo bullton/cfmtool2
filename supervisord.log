@@ -1,0 +1,16 @@
+2018-02-22 07:46:42,170 INFO daemonizing the supervisord process
+2018-02-22 07:46:42,170 INFO supervisord started with pid 5259
+2018-02-22 07:46:43,172 INFO spawned: 'cfmtool2' with pid 5260
+2018-02-22 07:46:44,658 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-02-23 04:13:43,820 WARN received SIGHUP indicating restart request
+2018-02-23 04:13:43,820 INFO waiting for cfmtool2 to die
+2018-02-23 04:13:44,822 WARN received SIGTERM indicating exit request
+2018-02-23 04:13:47,342 INFO waiting for cfmtool2 to die
+2018-02-23 04:13:50,346 INFO waiting for cfmtool2 to die
+2018-02-23 04:13:53,349 INFO waiting for cfmtool2 to die
+2018-02-23 04:13:54,350 WARN killing 'cfmtool2' (5260) with SIGKILL
+2018-02-23 04:13:54,359 INFO stopped: cfmtool2 (terminated by SIGKILL)
+2018-02-23 04:14:40,201 INFO daemonizing the supervisord process
+2018-02-23 04:14:40,205 INFO supervisord started with pid 2900
+2018-02-23 04:14:41,210 INFO spawned: 'cfmtool2' with pid 2901
+2018-02-23 04:14:42,296 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
