@@ -1,16 +1,50 @@
-2018-02-22 07:46:42,170 INFO daemonizing the supervisord process
-2018-02-22 07:46:42,170 INFO supervisord started with pid 5259
-2018-02-22 07:46:43,172 INFO spawned: 'cfmtool2' with pid 5260
-2018-02-22 07:46:44,658 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
-2018-02-23 04:13:43,820 WARN received SIGHUP indicating restart request
-2018-02-23 04:13:43,820 INFO waiting for cfmtool2 to die
-2018-02-23 04:13:44,822 WARN received SIGTERM indicating exit request
-2018-02-23 04:13:47,342 INFO waiting for cfmtool2 to die
-2018-02-23 04:13:50,346 INFO waiting for cfmtool2 to die
-2018-02-23 04:13:53,349 INFO waiting for cfmtool2 to die
-2018-02-23 04:13:54,350 WARN killing 'cfmtool2' (5260) with SIGKILL
-2018-02-23 04:13:54,359 INFO stopped: cfmtool2 (terminated by SIGKILL)
-2018-02-23 04:14:40,201 INFO daemonizing the supervisord process
-2018-02-23 04:14:40,205 INFO supervisord started with pid 2900
-2018-02-23 04:14:41,210 INFO spawned: 'cfmtool2' with pid 2901
-2018-02-23 04:14:42,296 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-02-24 02:45:24,999 INFO daemonizing the supervisord process
+2018-02-24 02:45:25,000 INFO supervisord started with pid 24486
+2018-02-24 02:45:26,002 INFO spawned: 'cfmtool2' with pid 24487
+2018-02-24 02:45:27,684 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-02-24 06:15:58,211 WARN received SIGHUP indicating restart request
+2018-02-24 06:15:58,211 INFO waiting for cfmtool2 to die
+2018-02-24 06:15:58,212 WARN received SIGTERM indicating exit request
+2018-02-24 06:16:01,713 INFO waiting for cfmtool2 to die
+2018-02-24 06:16:04,716 INFO waiting for cfmtool2 to die
+2018-02-24 06:16:07,720 INFO waiting for cfmtool2 to die
+2018-02-24 06:16:08,721 WARN killing 'cfmtool2' (24487) with SIGKILL
+2018-02-24 06:16:08,728 INFO stopped: cfmtool2 (terminated by SIGKILL)
+2018-02-24 07:01:21,854 INFO daemonizing the supervisord process
+2018-02-24 07:01:21,865 INFO supervisord started with pid 3028
+2018-02-24 07:01:22,872 INFO spawned: 'cfmtool2' with pid 3029
+2018-02-24 07:01:23,955 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2018-02-24 07:01:37,211 INFO daemonizing the supervisord process
+2018-02-24 07:01:37,212 INFO supervisord started with pid 3050
+2018-02-24 07:01:38,214 INFO spawned: 'cfmtool2' with pid 3051
+2018-02-24 07:01:38,218 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:01:39,220 INFO spawned: 'cfmtool2' with pid 3052
+2018-02-24 07:01:39,225 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:01:41,228 INFO spawned: 'cfmtool2' with pid 3053
+2018-02-24 07:01:41,232 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:01:44,236 INFO spawned: 'cfmtool2' with pid 3055
+2018-02-24 07:01:44,240 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:01:45,242 INFO gave up: cfmtool2 entered FATAL state, too many start retries too quickly
+2018-02-24 07:03:51,804 WARN received SIGHUP indicating restart request
+2018-02-24 07:03:51,804 INFO waiting for cfmtool2 to die
+2018-02-24 07:03:51,808 WARN received SIGHUP indicating restart request
+2018-02-24 07:03:51,812 INFO supervisord started with pid 3050
+2018-02-24 07:03:52,805 WARN received SIGTERM indicating exit request
+2018-02-24 07:03:52,814 INFO spawned: 'cfmtool2' with pid 3222
+2018-02-24 07:03:52,818 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:03:53,820 INFO spawned: 'cfmtool2' with pid 3253
+2018-02-24 07:03:53,824 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:03:55,310 INFO waiting for cfmtool2 to die
+2018-02-24 07:03:55,827 INFO spawned: 'cfmtool2' with pid 3269
+2018-02-24 07:03:55,831 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:03:58,314 INFO waiting for cfmtool2 to die
+2018-02-24 07:03:58,835 INFO spawned: 'cfmtool2' with pid 3271
+2018-02-24 07:03:58,840 INFO exited: cfmtool2 (exit status 1; not expected)
+2018-02-24 07:03:59,841 INFO gave up: cfmtool2 entered FATAL state, too many start retries too quickly
+2018-02-24 07:04:01,317 INFO waiting for cfmtool2 to die
+2018-02-24 07:04:02,319 WARN killing 'cfmtool2' (3029) with SIGKILL
+2018-02-24 07:04:02,321 INFO stopped: cfmtool2 (terminated by SIGKILL)
+2018-02-24 07:22:52,665 INFO daemonizing the supervisord process
+2018-02-24 07:22:52,666 INFO supervisord started with pid 3598
+2018-02-24 07:22:53,668 INFO spawned: 'cfmtool2' with pid 3599
+2018-02-24 07:22:54,755 INFO success: cfmtool2 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)

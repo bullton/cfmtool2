@@ -265,6 +265,9 @@ def editrule():
                 # return redirect(url_for('editrule'))
                 flash('Rule is already sucessfully edited!', 'success')
                 return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=id, rule=rule)
+        else:
+            flash('A Null rule cannot be edited' , 'danger')
+            return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
 
 
 @app.route('/editrule/showedit/',methods=['GET','POST'])

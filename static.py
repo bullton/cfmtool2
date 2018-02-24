@@ -159,10 +159,10 @@ class Static:
         for index, row in self.source.iterrows():
             report_day = row['Reported Date']
             close_day = row['State Changed to Closed']
+            rd = self.to_date_time(report_day)
             rpcw_list.append(str(pd.Timestamp(self.to_date_time(report_day)).year) + '_CW' + str(pd.Timestamp(self.to_date_time(report_day)).weekofyear))
             if row['State'] == 'Closed' and self.to_date_time(close_day):
                 cd = self.to_date_time(close_day)
-                rd = self.to_date_time(report_day)
                 if cd:
                     clcw_list.append(str(pd.Timestamp(self.to_date_time(close_day)).year) + '_CW' + str(
                         pd.Timestamp(self.to_date_time(close_day)).weekofyear))

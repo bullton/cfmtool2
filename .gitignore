@@ -6,3 +6,6 @@ migrations
 .DS_Store
 venv
 export
+supervisord.log
+supervisord.pid
+logs/*
