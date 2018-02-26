@@ -2,6 +2,7 @@
 
 from flask import Flask,render_template,url_for,request,redirect,session,flash, send_file, send_from_directory
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash,check_password_hash
 import config
 from models import User, Source, Rule, Static_Data
 from static import Static
@@ -128,7 +129,7 @@ def trend():
 def newrule():
     user_id = session.get('user_id')
     if request.method == 'GET':
-        userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+        userrulelist = Rule.query.order_by(desc(Rule.id)).all()
         return render_template('newrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
     else:
         rulename = request.form.get('rulename')
@@ -292,7 +293,7 @@ def newref():
     user_id = session.get('user_id')
     ruleid = request.form.get('ruleid')
     rule = Rule.query.filter(Rule.id == ruleid).first()
-    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+    userrulelist = Rule.query.order_by(desc(Rule.id)).all()
     key1 = OrderedDict()
     key2 = OrderedDict()
     for k in rulekey1.keys():
@@ -346,8 +347,8 @@ def login():
     else:
         username = request.form.get('username')
         password = request.form.get('password')
-        user = User.query.filter(User.username == username, User.password == password).first()
-        if user:
+        user = User.query.filter(User.username == username).first()
+        if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
             session.permanent = True
             flash('You were successfully logged in')
@@ -376,7 +377,7 @@ def register():
                 flash('Please confirm password!', 'danger')
                 return redirect(url_for('register'))
             else:
-                user = User(email=email, username=username, password=password1)
+                user = User(email=email, username=username, password=generate_password_hash(password1))
                 db.session.add(user)
                 db.session.commit()
                 flash('Congratulations! You have successfully signed up! ', 'success')

@@ -2,7 +2,6 @@
 
 from exts import db
 from datetime import datetime
-
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 
