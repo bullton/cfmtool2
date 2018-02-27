@@ -98,7 +98,7 @@ class Static:
             if bbutypelist:
                 pass
             else:
-                bbutypelist.append('OTHERS')
+                bbutypelist.append('Others')
             bbutype.append(','.join(bbutypelist))
             bbutypelist[:]=[]
         return bbutype

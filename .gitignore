@@ -9,3 +9,4 @@ export
 supervisord.log
 supervisord.pid
 logs/*
+uploadfolder

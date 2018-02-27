@@ -90,16 +90,17 @@ def statics():
     df_dedicate_finding = pd.DataFrame()
     for index, row in df_fdd_customer_bbu_cate.iterrows():
         subtotal = 0
-        totaldays = 0
         for col in df_fdd_customer_bbu_cate.columns:
             if col in ['FSMF','Airscale','Others']:
-                count = data[(data['CustomerImpact']==True)&(data['BBU']==col)&(data['Severity']==index)].count()['CustomerImpact']
+                count = \
+                    data[(data['CustomerImpact']==True)&(data['BBU']==col)&(data['Severity']==index)].count()['CustomerImpact']
+                Sums = \
+                    data[(data['CustomerImpact'] == True) & (data['BBU'] == col) & (data['Severity'] == index)].sum()['Opendays']
                 df_fdd_customer_bbu_cate[col][index] = count
                 subtotal = subtotal + count
-                totaldays = totaldays + 30
         df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
-        df_fdd_customer_bbu_cate['OpenDays'][index] = totaldays / subtotal
-    return render_template('statics.html',stat=data)
+        df_fdd_customer_bbu_cate['OpenDays'][index] = Sums / subtotal
+    return render_template('statics.html',stat=df_fdd_customer_bbu_cate)
 
 
 @app.route('/export/')
