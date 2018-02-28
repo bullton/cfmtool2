@@ -59,6 +59,8 @@ def data():
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
         data = pd.read_excel(source_path)
+        if 'Unnamed' in data.columns:
+            data = pd.read_excel(source_path, skiprows = range(0, 6))
         # titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
         stat = pd.DataFrame()
         rule = Rule.query.filter(Rule.id == select_rule).first()
