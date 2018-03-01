@@ -92,20 +92,16 @@ def statics():
     df_dedicate_finding = pd.DataFrame()
     for index, row in df_fdd_customer_bbu_cate.iterrows():
         subtotal = 0
-        sum_opendays_severity = 0
         for col in df_fdd_customer_bbu_cate.columns:
             if col in ['FSMF','Airscale','Others']:
                 count = \
                     data[(data['CustomerImpact']==True) & (data['BBU'].isin(col.split())) & (data['Severity']==index)].count()['CustomerImpact']
-                sums = \
-                    data[(data['CustomerImpact'] == True) & (data['BBU'].isin(col.split())) & (data['Severity'] == index)].sum()['Opendays']
                 df_fdd_customer_bbu_cate[col][index] = count
-                subtotal = subtotal + count
-                sum_opendays_severity = sum_opendays_severity + sums
-                print col, index, count, sums
+        sum_opendays_severity = data[(data['CustomerImpact'] == True) & (data['Severity'] == index)].sum()['Opendays']
+        subtotal = data[(data['CustomerImpact'] == True) & (data['Severity'] == index)].count()['CustomerImpact']
         df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
         df_fdd_customer_bbu_cate['OpenDays'][index] = sum_opendays_severity / subtotal
-        print index, sum_opendays_severity
+        print index, sum_opendays_severity, subtotal
 
     return render_template('statics.html',stat=df_fdd_customer_bbu_cate)
 
