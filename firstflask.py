@@ -59,7 +59,7 @@ def data():
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
         data = pd.read_excel(source_path)
-        if 'Unnamed' in data.columns:
+        if 'Unnamed' in ','.join(data.columns):
             data = pd.read_excel(source_path, skiprows = range(0, 6))
         # titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
         stat = pd.DataFrame()
@@ -92,16 +92,21 @@ def statics():
     df_dedicate_finding = pd.DataFrame()
     for index, row in df_fdd_customer_bbu_cate.iterrows():
         subtotal = 0
+        sum_opendays_severity = 0
         for col in df_fdd_customer_bbu_cate.columns:
             if col in ['FSMF','Airscale','Others']:
                 count = \
-                    data[(data['CustomerImpact']==True)&(data['BBU']==col)&(data['Severity']==index)].count()['CustomerImpact']
-                Sums = \
-                    data[(data['CustomerImpact'] == True) & (data['BBU'] == col) & (data['Severity'] == index)].sum()['Opendays']
+                    data[(data['CustomerImpact']==True) & (data['BBU'].isin(col.split())) & (data['Severity']==index)].count()['CustomerImpact']
+                sums = \
+                    data[(data['CustomerImpact'] == True) & (data['BBU'].isin(col.split())) & (data['Severity'] == index)].sum()['Opendays']
                 df_fdd_customer_bbu_cate[col][index] = count
                 subtotal = subtotal + count
+                sum_opendays_severity = sum_opendays_severity + sums
+                print col, index, count, sums
         df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
-        df_fdd_customer_bbu_cate['OpenDays'][index] = Sums / subtotal
+        df_fdd_customer_bbu_cate['OpenDays'][index] = sum_opendays_severity / subtotal
+        print index, sum_opendays_severity
+
     return render_template('statics.html',stat=df_fdd_customer_bbu_cate)
 
 
