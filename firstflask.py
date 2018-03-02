@@ -84,12 +84,13 @@ def statics():
     static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
     data = pd.DataFrame(eval(static_data.data.replace('nan','np.nan')))
     df_fdd_customer_bbu_cate = pd.DataFrame(columns=['FSMF','Airscale','Others','Subtotal','OpenDays'],index=['A - Critical','B - Major','C - Minor'])
-    df_tdd_customer_bbu = pd.DataFrame()
+    df_tdd_customer_bbu = pd.DataFrame(columns=['UUF','KPI','CA','OAM Stab','PET Stab','Func'])
     df_fdd_bbu = pd.DataFrame()
     df_tdd_bbu = pd.DataFrame()
     df_top_pr = pd.DataFrame()
     df_top_blocker = pd.DataFrame()
     df_dedicate_finding = pd.DataFrame()
+    stats=[]
     for index, row in df_fdd_customer_bbu_cate.iterrows():
         subtotal = 0
         for col in df_fdd_customer_bbu_cate.columns:
@@ -102,8 +103,8 @@ def statics():
         df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
         df_fdd_customer_bbu_cate['OpenDays'][index] = sum_opendays_severity / subtotal
         print index, sum_opendays_severity, subtotal
-
-    return render_template('statics.html',stat=df_fdd_customer_bbu_cate)
+    stats.append(df_fdd_customer_bbu_cate)
+    return render_template('statics.html',stats=stats)
 
 
 @app.route('/export/')

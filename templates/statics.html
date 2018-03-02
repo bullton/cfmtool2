@@ -11,6 +11,7 @@
 {% block main %}
     <div class="form-container"  style="margin: 20px">
         <div class="row pre" style="overflow-y:auto; overflow-x:auto; width:1200px; height:700px;">
+            {% for stat in stats %}
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -35,6 +36,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% endfor %}
         </div>
     </div>
     <div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
