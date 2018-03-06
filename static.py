@@ -124,7 +124,21 @@ class Static:
         cate_list=[]
         category_tag = self.rule.category_tag.split(',')
         for category in category_tag:
-            df[category] = self.search(['Title','Description'],category)
+            print category
+            if category == 'UUF':
+                df[category] = self.search(['Title','Description'],self.rule.uuf_filter)
+            elif category == 'KPI':
+                df[category] = self.search(['Title', 'Description'], self.rule.kpi_filter)
+            elif category == 'CA':
+                df[category] = self.search(['Title', 'Description'], self.rule.ca_filter)
+            elif category == 'OAMStab':
+                df[category] = self.search(['Title', 'Description'], self.rule.oamstab_filter)
+            elif category == 'PETStab':
+                df[category] = self.search(['Title', 'Description'], self.rule.pet_filter)
+            elif category == 'Func':
+                df[category] = self.search(['Title', 'Description'], self.rule.func_filter)
+
+
         for index, row in df.iterrows():
             cate_list.append([])
             for category in category_tag:
@@ -135,7 +149,7 @@ class Static:
             if cate_list[i]:
                 pass
             else:
-                cate_list[i] = np.nan
+                cate_list[i] = 'Func'
         return cate_list
 
     def to_date_time(self, date_time):

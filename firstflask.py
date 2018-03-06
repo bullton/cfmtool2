@@ -29,10 +29,77 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 db.init_app(app)
 
 
-
 def allowed_file(filename):                                  
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+def static_bbu_severity(df_data, xdd, iscustomer):
+    df_bbu_severity = pd.DataFrame(columns=['FSMF', 'Airscale', 'Others', 'Subtotal', 'OpenDays'],index=['A - Critical', 'B - Major', 'C - Minor'])
+    for index, row in df_bbu_severity.iterrows():
+        subtotal = 0
+        for col in df_bbu_severity.columns:
+            if col in ['FSMF','Airscale','Others']:
+                if xdd == 'FDD':
+                    if iscustomer:
+                        count = df_data[(df_data['CustomerImpact'] == True) & (df_data['BBU'].isin(col.split())) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
+                        df_bbu_severity[col][index] = count
+                    else:
+                        count = \
+                            df_data[(df_data['BBU'].isin(col.split())) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
+                        df_bbu_severity[col][index] = count
+                else:
+                    if iscustomer:
+                        count = \
+                            df_data[(df_data['CustomerImpact'] == True) & (df_data['BBU'].isin(col.split())) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
+                        df_bbu_severity[col][index] = count
+                    else:
+                        count = \
+                            df_data[(df_data['BBU'].isin(col.split())) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
+                        df_bbu_severity[col][index] = count
+        if xdd == 'FDD':
+            if iscustomer:
+                sum_opendays_severity = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index)].sum()['Opendays']
+                subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
+            else:
+                sum_opendays_severity = df_data[(df_data['Severity'] == index)].sum()['Opendays']
+                subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
+        else:
+            if iscustomer:
+                sum_opendays_severity = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index)].sum()['Opendays']
+                subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
+            else:
+                sum_opendays_severity = df_data[(df_data['Severity'] == index)].sum()['Opendays']
+                subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
+        df_bbu_severity['Subtotal'][index] = subtotal
+        df_bbu_severity['OpenDays'][index] = sum_opendays_severity / subtotal
+    return df_bbu_severity
+
+
+def static_cat(df_data, xdd, use_rule, iscustomer):
+    cat_list = use_rule.category_tag.split(',')
+    print cat_list
+    df_static_cat = pd.DataFrame(columns=cat_list,index=[''])
+    for col in df_static_cat.columns:
+        if xdd == 'FDD' and iscustomer:
+            count = \
+                df_data[(df_data['CustomerImpact'] == True) & (df_data['CrossCount'].isin(['F','FT'])) & (df_data['Category']==col)].count()['CustomerImpact']
+            df_static_cat[col][''] = count
+        elif xdd == 'FDD' and not iscustomer:
+            count = \
+                df_data[(df_data['CrossCount'].isin(['F','FT'])) & (df_data['Category']==col)].count()['CustomerImpact']
+            df_static_cat[col][''] = count
+        elif xdd == 'TDD' and iscustomer:
+            count = \
+                df_data[(df_data['CustomerImpact'] == True) & (df_data['CrossCount'].isin(['T','FT'])) & (df_data['Category']==col)].count()['CustomerImpact']
+            df_static_cat[col][''] = count
+        else:
+            count = \
+                df_data[(df_data['CrossCount'].isin(['T','FT'])) & (df_data['Category']==col)].count()['CustomerImpact']
+            df_static_cat[col][''] = count
+    return df_static_cat
+
+
 
 
 rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
@@ -70,6 +137,7 @@ def data():
         static_data = Static_Data(data=str(stat_orderdict))
         user = User.query.filter(User.id == user_id).first()
         static_data.owner = user
+        static_data.use_rule = rule
         db.session.add(static_data)
         db.session.commit()
         # qqqqq = Static_Data.query.order_by(desc(Static_Data.id)).first()
@@ -82,8 +150,9 @@ def data():
 def statics():
     user_id = session.get('user_id')
     static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
+    use_rule = Rule.query.filter(Rule.id == static_data.use_rule_id).first()
     data = pd.DataFrame(eval(static_data.data.replace('nan','np.nan')))
-    df_fdd_customer_bbu_cate = pd.DataFrame(columns=['FSMF','Airscale','Others','Subtotal','OpenDays'],index=['A - Critical','B - Major','C - Minor'])
+    # df_fdd_customer_bbu = pd.DataFrame(columns=['FSMF','Airscale','Others','Subtotal','OpenDays'],index=['A - Critical','B - Major','C - Minor'])
     df_tdd_customer_bbu = pd.DataFrame(columns=['UUF','KPI','CA','OAM Stab','PET Stab','Func'])
     df_fdd_bbu = pd.DataFrame()
     df_tdd_bbu = pd.DataFrame()
@@ -91,19 +160,27 @@ def statics():
     df_top_blocker = pd.DataFrame()
     df_dedicate_finding = pd.DataFrame()
     stats=[]
-    for index, row in df_fdd_customer_bbu_cate.iterrows():
-        subtotal = 0
-        for col in df_fdd_customer_bbu_cate.columns:
-            if col in ['FSMF','Airscale','Others']:
-                count = \
-                    data[(data['CustomerImpact']==True) & (data['BBU'].isin(col.split())) & (data['Severity']==index)].count()['CustomerImpact']
-                df_fdd_customer_bbu_cate[col][index] = count
-        sum_opendays_severity = data[(data['CustomerImpact'] == True) & (data['Severity'] == index)].sum()['Opendays']
-        subtotal = data[(data['CustomerImpact'] == True) & (data['Severity'] == index)].count()['CustomerImpact']
-        df_fdd_customer_bbu_cate['Subtotal'][index] = subtotal
-        df_fdd_customer_bbu_cate['OpenDays'][index] = sum_opendays_severity / subtotal
-        print index, sum_opendays_severity, subtotal
-    stats.append(df_fdd_customer_bbu_cate)
+    # FDD cBBU
+    #for index, row in df_fdd_customer_bbu.iterrows():
+    #    subtotal = 0
+    #    for col in df_fdd_customer_bbu.columns:
+    #        if col in ['FSMF','Airscale','Others']:
+    #            count = \
+    #                data[(data['CustomerImpact']==True) & (data['BBU'].isin(col.split())) & (data['Severity']==index) & (data['CrossCount'].isin(['F']))].count()['CustomerImpact']
+    #            df_fdd_customer_bbu[col][index] = count
+    #    sum_opendays_severity = data[(data['CustomerImpact'] == True) & (data['Severity'] == index)].sum()['Opendays']
+    #    subtotal = data[(data['CustomerImpact'] == True) & (data['Severity'] == index)].count()['CustomerImpact']
+    #    df_fdd_customer_bbu['Subtotal'][index] = subtotal
+    #    df_fdd_customer_bbu['OpenDays'][index] = sum_opendays_severity / subtotal
+    #    print index, sum_opendays_severity, subtotal
+    stats.append(static_bbu_severity(data,'FDD',True))
+    stats.append(static_cat(data,'FDD',use_rule,True))
+    stats.append(static_bbu_severity(data, 'TDD', True))
+    stats.append(static_cat(data, 'TDD', use_rule, True))
+    stats.append(static_bbu_severity(data, 'FDD', False))
+    stats.append(static_cat(data, 'FDD', use_rule, False))
+    stats.append(static_bbu_severity(data, 'TDD', False))
+    stats.append(static_cat(data, 'TDD', use_rule, False))
     return render_template('statics.html',stats=stats)
 
 
@@ -204,7 +281,8 @@ def editrule():
         customer_keyword_black = request.form.get('customer_keyword_black')
         category_tag = request.form.get('category_tag')
         category_search_field = request.form.get('category_search_field')
-        uuf_filter = request.form.get('uuf_filter')
+        uuf_filter = request.form.get('uuf_filter').decode("utf-8")
+        print 'uuf=',uuf_filter
         uuf_exclusion = request.form.get('uuf_exclusion')
         kpi_filter = request.form.get('kpi_filter')
         kpi_exclusion = request.form.get('kpi_exclusion')

@@ -60,7 +60,6 @@ class Rule(db.Model):
     fsih = db.Column(db.Text)
     ftcomsc = db.Column(db.Text)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
     owner = db.relationship('User', backref=db.backref('rule'))
 
 class Static_Data(db.Model):
@@ -68,5 +67,7 @@ class Static_Data(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     data = db.Column(LONGTEXT)
     static_time = db.Column(db.DateTime,default=datetime.now)
+    use_rule_id = db.Column(db.Integer, db.ForeignKey('rule.id'))
+    use_rule = db.relationship('Rule', backref=db.backref('static_data'))
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     owner = db.relationship('User', backref=db.backref('static_data'))
