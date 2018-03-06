@@ -282,7 +282,6 @@ def editrule():
         category_tag = request.form.get('category_tag')
         category_search_field = request.form.get('category_search_field')
         uuf_filter = request.form.get('uuf_filter').decode("utf-8")
-        print 'uuf=',uuf_filter
         uuf_exclusion = request.form.get('uuf_exclusion')
         kpi_filter = request.form.get('kpi_filter')
         kpi_exclusion = request.form.get('kpi_exclusion')
@@ -365,8 +364,10 @@ def showedit():
     key2 = OrderedDict()
     for k in rulekey1.keys():
         key1[k] = vars(rule)[k]
+        print key1[k]
     for k in rulekey2.keys():
         key2[k] = vars(rule)[k]
+        print key2[k]
     return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 

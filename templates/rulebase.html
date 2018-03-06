@@ -13,7 +13,6 @@
                 $("form").submit();
             }
         }
-
         var btn = document.getElementById('save');
         btn.addEventListener("click", post(), false);
         function post() {
@@ -74,7 +73,7 @@
                     {% for k,v in key1.items() %}
                         <div class="form-group">
                             <label>{{ k }}:</label>
-                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} {% if k!=v %}value={{ v }}{% endif %}>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} {% if k!=v %}value='{{ v }}'{% endif %}>
                         </div>
                     {% endfor %}
                 </div><!--/middle-->
@@ -82,7 +81,7 @@
                     {% for k,v in key2.items() %}
                         <div class="form-group">
                             <label>{{ k }}:</label>
-                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} {% if k!=v %}value={{ v }}{% endif %}>
+                            <input type="text" class="form-control" placeholder={{ k }} name={{ k }} {% if k!=v %}value='{{ v }}'{% endif %}>
                         </div>
                     {% endfor %}
                 </div><!--/right-->
