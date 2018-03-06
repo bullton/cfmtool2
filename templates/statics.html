@@ -11,31 +11,44 @@
 {% block main %}
     <div class="form-container"  style="margin: 20px">
         <div class="row pre" style="overflow-y:auto; overflow-x:auto; width:1200px; height:700px;">
-            {% for stat in stats %}
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Index</th>
-                        {% for col_name in stat.columns %}
-                            <th>{{ col_name }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for index, row in stat.iterrows() %}
+            {% for i,stat in enumerate(stats) %}
+                {% if  i in [0,2,4,6,8]%}
+                    <div class="row">
+                        <div class="col-md-6 table-responsive" style="background-color:#9999ff;text-align: center; ">
+                {% else %}
+                        <div class="col-md-6 table-responsive" style="background-color:#99ffcc;text-align: center; ">
+                {% endif %}
+                <table class="table table-hover table-bordered table-condensed text-nowrap" align="center">
+                    <thead>
+                        <tr>{{ stats_title[i] }}</tr>
                         <tr>
-                            <th scope="row">{{ index }}</th>
+                            <th style="text-align: center">Index</th>
                             {% for col_name in stat.columns %}
-                                {% if col_name == 'PR_ID' %}
-                                    <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-lg">{{ row[col_name] }}</button></td>
-                                {% else %}
-                                    <td>{{ row[col_name] }}</td>
-                                {% endif %}
+                                <th style="text-align: center">{{ col_name }}</th>
                             {% endfor %}
                         </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {% for index, row in stat.iterrows() %}
+                            <tr>
+                                <th scope="row">{{ index }}</th>
+                                {% for col_name in stat.columns %}
+                                    {% if col_name == 'PR_ID' %}
+                                        <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-lg">{{ row[col_name] }}</button></td>
+                                    {% else %}
+                                        <td>{{ row[col_name] }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                {% if  i in [1,3,5,7,9]%}
+                        </div>
+                    </div>
+                {% else %}
+                    </div>
+                {% endif %}
             {% endfor %}
         </div>
     </div>

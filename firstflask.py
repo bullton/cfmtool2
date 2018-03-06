@@ -160,6 +160,7 @@ def statics():
     df_top_blocker = pd.DataFrame()
     df_dedicate_finding = pd.DataFrame()
     stats=[]
+    stats_title=[]
     # FDD cBBU
     #for index, row in df_fdd_customer_bbu.iterrows():
     #    subtotal = 0
@@ -174,14 +175,24 @@ def statics():
     #    df_fdd_customer_bbu['OpenDays'][index] = sum_opendays_severity / subtotal
     #    print index, sum_opendays_severity, subtotal
     stats.append(static_bbu_severity(data,'FDD',True))
-    stats.append(static_cat(data,'FDD',use_rule,True))
     stats.append(static_bbu_severity(data, 'TDD', True))
+    stats.append(static_cat(data,'FDD',use_rule,True))
     stats.append(static_cat(data, 'TDD', use_rule, True))
+
     stats.append(static_bbu_severity(data, 'FDD', False))
-    stats.append(static_cat(data, 'FDD', use_rule, False))
     stats.append(static_bbu_severity(data, 'TDD', False))
+    stats.append(static_cat(data, 'FDD', use_rule, False))
     stats.append(static_cat(data, 'TDD', use_rule, False))
-    return render_template('statics.html',stats=stats)
+
+    stats_title.append('FDD - ' + use_rule.customer)
+    stats_title.append('TDD - ' + use_rule.customer)
+    stats_title.append('FDD - Category - ' + use_rule.customer)
+    stats_title.append('TDD - Category - ' + use_rule.customer)
+    stats_title.append('FDD - ' + use_rule.release)
+    stats_title.append('TDD - ' + use_rule.release)
+    stats_title.append('FDD - Category - ' + use_rule.release)
+    stats_title.append('TDD - Category - ' + use_rule.release)
+    return render_template('statics.html',stats=stats,enumerate=enumerate,stats_title=stats_title)
 
 
 @app.route('/export/')
