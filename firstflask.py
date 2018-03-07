@@ -10,7 +10,7 @@ from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform, re, xlrd, time
+import os, datetime, platform, re, xlrd, time, random
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,9 +22,11 @@ app.config.from_object(config)
 # fileupload config
 UPLOAD_FOLDER='uploadfolder'
 EXPORT_FOLDER='export'
-ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])      
+FIGURE_FOLDER='static/figure'
+ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['EXPORT_FOLDER'] = EXPORT_FOLDER
+app.config['FIGURE_FOLDER'] = FIGURE_FOLDER
 basedir = os.path.abspath(os.path.dirname(__file__))
 db.init_app(app)
 
@@ -63,14 +65,14 @@ def static_bbu_severity(df_data, xdd, iscustomer):
                 subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
             else:
                 sum_opendays_severity = df_data[(df_data['Severity'] == index)].sum()['Opendays']
-                subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
+                subtotal = df_data[(df_data['Severity'] == index) & (df_data['CrossCount'].isin(['F','FT']))].count()['CustomerImpact']
         else:
             if iscustomer:
                 sum_opendays_severity = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index)].sum()['Opendays']
                 subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
             else:
                 sum_opendays_severity = df_data[(df_data['Severity'] == index)].sum()['Opendays']
-                subtotal = df_data[(df_data['CustomerImpact'] == True) & (df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
+                subtotal = df_data[(df_data['Severity'] == index) & (df_data['CrossCount'].isin(['T','FT']))].count()['CustomerImpact']
         df_bbu_severity['Subtotal'][index] = subtotal
         df_bbu_severity['OpenDays'][index] = sum_opendays_severity / subtotal
     return df_bbu_severity
@@ -78,7 +80,6 @@ def static_bbu_severity(df_data, xdd, iscustomer):
 
 def static_cat(df_data, xdd, use_rule, iscustomer):
     cat_list = use_rule.category_tag.split(',')
-    print cat_list
     df_static_cat = pd.DataFrame(columns=cat_list,index=[''])
     for col in df_static_cat.columns:
         if xdd == 'FDD' and iscustomer:
@@ -100,6 +101,35 @@ def static_cat(df_data, xdd, use_rule, iscustomer):
     return df_static_cat
 
 
+def static_bar_severity(data, title):
+    ind = np.arange(3)
+    width = 0.3
+    FSMF = data['FSMF']
+    Airscale = data['Airscale']
+    Others = data['Others']
+    Sum = data['Subtotal']
+    print max(Sum)
+
+    figure_path = os.path.join(basedir, app.config['FIGURE_FOLDER'])
+    unix_time = int(time.time())
+    filename = str(unix_time) + str(random.randint(1000,9999)) + '.png'
+    fullpath = os.path.join(figure_path, filename)
+
+    p1 = plt.bar(ind, FSMF, width, color='r')
+    p2 = plt.bar(ind, Airscale, width, color='b', bottom=FSMF)
+    cum = list(map(sum, zip(list(FSMF), list(Airscale))))
+    p3 = plt.bar(ind, Others, width, color='g', bottom=cum)
+
+    plt.ylabel('Pronto QTY')
+    plt.title(title)
+    plt.xticks(ind + width / 2., ('Critical', 'Major', 'Minor'))
+    plt.yticks(np.arange(0, max(Sum), 100))
+    plt.legend((p1[0], p2[0], p3[0]), ('FSMF', 'Airscale', 'Others'), loc=2, frameon='false')
+    plt.tick_params(top='off', bottom='off', right='off')
+    plt.grid(axis='y', linestyle='-')
+    plt.savefig(fullpath)
+    plt.close('all')
+    return filename
 
 
 rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
@@ -161,6 +191,7 @@ def statics():
     df_dedicate_finding = pd.DataFrame()
     stats=[]
     stats_title=[]
+    stats_figure=[]
     # FDD cBBU
     #for index, row in df_fdd_customer_bbu.iterrows():
     #    subtotal = 0
@@ -175,12 +206,17 @@ def statics():
     #    df_fdd_customer_bbu['OpenDays'][index] = sum_opendays_severity / subtotal
     #    print index, sum_opendays_severity, subtotal
     stats.append(static_bbu_severity(data,'FDD',True))
+    stats_figure.append(static_bar_severity(stats[0], 'FDD - ' + use_rule.customer))
+    time.sleep(2)
     stats.append(static_bbu_severity(data, 'TDD', True))
+    stats_figure.append(static_bar_severity(stats[1], 'TDD - ' + use_rule.customer))
     stats.append(static_cat(data,'FDD',use_rule,True))
     stats.append(static_cat(data, 'TDD', use_rule, True))
 
     stats.append(static_bbu_severity(data, 'FDD', False))
+    stats_figure.append(static_bar_severity(stats[4], 'FDD - ' + use_rule.release))
     stats.append(static_bbu_severity(data, 'TDD', False))
+    stats_figure.append(static_bar_severity(stats[5], 'TDD - ' + use_rule.release))
     stats.append(static_cat(data, 'FDD', use_rule, False))
     stats.append(static_cat(data, 'TDD', use_rule, False))
 
@@ -192,7 +228,8 @@ def statics():
     stats_title.append('TDD - ' + use_rule.release)
     stats_title.append('FDD - Category - ' + use_rule.release)
     stats_title.append('TDD - Category - ' + use_rule.release)
-    return render_template('statics.html',stats=stats,enumerate=enumerate,stats_title=stats_title)
+    print stats_figure
+    return render_template('statics.html',stats=stats,enumerate=enumerate,stats_title=stats_title,stats_figure=stats_figure)
 
 
 @app.route('/export/')
@@ -375,10 +412,8 @@ def showedit():
     key2 = OrderedDict()
     for k in rulekey1.keys():
         key1[k] = vars(rule)[k]
-        print key1[k]
     for k in rulekey2.keys():
         key2[k] = vars(rule)[k]
-        print key2[k]
     return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 
