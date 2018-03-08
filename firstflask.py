@@ -104,6 +104,29 @@ def static_cat(df_data, xdd, use_rule, iscustomer):
     return df_static_cat
 
 
+def static_top_pr(df_data, use_rule):
+    num_release = re.sub('[TLF]', '', use_rule.release)
+    sr_toppr = pd.DataFrame(index = ["TL"+num_release,"TL00","FL"+num_release,"FL00"])
+    for index in sr_toppr.index:
+        sr_toppr.loc[index, 'QTY'] = df_data[(df_data['Top'] == True) & (df_data['Release'].isin([index]))].count()['CustomerImpact']
+    print sr_toppr
+    return sr_toppr
+
+
+def static_top_blocker(df_data, use_rule):
+    df = pd.DataFrame(index = ['Closed','Open'])
+    df['QTY'] = [338, 52]
+    df['Avg Opendays'] = [23.01, 21.60]
+    return df
+
+
+def static_dedicating(df_data, use_rule):
+    sr = pd.DataFrame(index = ['UUF', 'KPI', 'CA', 'OAMStab', 'PETStab', 'Func'])
+    for index in sr.index:
+        sr.loc[index, 'QTY'] = str(random.randint(1, 99))
+    return sr
+
+
 def save_file_path(folder, extend):
     file_path = os.path.join(basedir, folder)
     unix_time = int(time.time())
@@ -158,6 +181,27 @@ def static_bar_cat(data, title):
     plt.savefig(fullpath)
     plt.close('all')
     return filename
+
+
+def static_bar_one_column(data, title):
+    x = data.index
+    ind = np.arange(len(x))
+    y = data['QTY']
+    fullpath, filename = save_file_path(app.config['FIGURE_FOLDER'], '.png')
+    plt.ylabel('Pronto QTY')
+    plt.title(title)
+    width = 0.3
+    plt.bar(ind, y, width, color='r')
+    #plt.yticks(np.arange(0, Series.max(df['QTY']), 10))
+    plt.xticks(ind + width / 2., x)
+    plt.tick_params(top='off', bottom='off', right='off')
+    plt.grid(axis='y', linestyle='-')
+    plt.savefig(fullpath)
+    plt.close('all')
+    return filename
+
+
+
 
 
 rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
@@ -259,7 +303,17 @@ def statics():
     stats_title.append('TDD - ' + use_rule.release)
     stats_title.append('FDD - Category - ' + use_rule.release)
     stats_title.append('TDD - Category - ' + use_rule.release)
-    print stats_figure
+    stats_title.append('TOP PR')
+    stats_title.append('TOP Blocker')
+    stats_title.append('Dedicated testing finding')
+
+    stats.append(static_top_pr(data, use_rule))
+    stats_figure.append(static_bar_one_column(stats[8],'TOP PR'))
+    stats.append(static_top_blocker(data, use_rule))
+    stats_figure.append(static_bar_one_column(stats[9], 'TOP Blocker'))
+    stats.append(static_dedicating(data, use_rule))
+    stats_figure.append(static_bar_one_column(stats[10], 'Dedicated testing finding'))
+
     return render_template('statics.html',stats=stats,enumerate=enumerate,stats_title=stats_title,stats_figure=stats_figure)
 
 
