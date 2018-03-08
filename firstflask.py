@@ -12,6 +12,7 @@ from sqlalchemy import desc
 from collections import OrderedDict
 import os, datetime, platform, re, xlrd, time, random
 import pandas as pd
+from pandas import Series,DataFrame
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
@@ -103,6 +104,14 @@ def static_cat(df_data, xdd, use_rule, iscustomer):
     return df_static_cat
 
 
+def save_file_path(folder, extend):
+    file_path = os.path.join(basedir, folder)
+    unix_time = int(time.time())
+    filename = str(unix_time) + str(random.randint(1000, 9999)) + extend
+    fullpath = os.path.join(file_path, filename)
+    return fullpath, filename
+
+
 def static_bar_severity(data, title):
     ind = np.arange(3)
     width = 0.3
@@ -129,6 +138,23 @@ def static_bar_severity(data, title):
     plt.legend((p1[0], p2[0], p3[0]), ('FSMF', 'Airscale', 'Others'), loc=2, frameon='false')
     plt.tick_params(top='off', bottom='off', right='off')
     plt.grid(axis='y', linestyle='-')
+    plt.savefig(fullpath)
+    plt.close('all')
+    return filename
+
+
+def static_bar_cat(data, title):
+    y = data.columns
+    y_pos = np.arange(len(y))
+    x = data.iloc[0]
+    error = np.random.rand(len(y))
+    fullpath, filename = save_file_path(app.config['FIGURE_FOLDER'], '.png')
+    # barh(bottom, width, height=0.8, left=0, **kwargs)
+    plt.barh(y_pos, x, xerr=error, height=0.8, align='center', alpha=0.4)
+    plt.yticks(y_pos, y)
+    plt.grid(axis='x', linestyle='-')
+    plt.xlabel('Pronto QTY')
+    plt.title(title)
     plt.savefig(fullpath)
     plt.close('all')
     return filename
@@ -209,18 +235,21 @@ def statics():
     #    print index, sum_opendays_severity, subtotal
     stats.append(static_bbu_severity(data,'FDD',True))
     stats_figure.append(static_bar_severity(stats[0], 'FDD - ' + use_rule.customer))
-    time.sleep(2)
     stats.append(static_bbu_severity(data, 'TDD', True))
     stats_figure.append(static_bar_severity(stats[1], 'TDD - ' + use_rule.customer))
     stats.append(static_cat(data,'FDD',use_rule,True))
+    stats_figure.append(static_bar_cat(stats[2], 'FDD - Category - ' + use_rule.customer))
     stats.append(static_cat(data, 'TDD', use_rule, True))
+    stats_figure.append(static_bar_cat(stats[3], 'TDD - Category - ' + use_rule.customer))
 
     stats.append(static_bbu_severity(data, 'FDD', False))
     stats_figure.append(static_bar_severity(stats[4], 'FDD - ' + use_rule.release))
     stats.append(static_bbu_severity(data, 'TDD', False))
     stats_figure.append(static_bar_severity(stats[5], 'TDD - ' + use_rule.release))
     stats.append(static_cat(data, 'FDD', use_rule, False))
+    stats_figure.append(static_bar_cat(stats[6], 'FDD - Category - ' + use_rule.release))
     stats.append(static_cat(data, 'TDD', use_rule, False))
+    stats_figure.append(static_bar_cat(stats[7], 'TDD - Category - ' + use_rule.release))
 
     stats_title.append('FDD - ' + use_rule.customer)
     stats_title.append('TDD - ' + use_rule.customer)
