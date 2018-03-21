@@ -13,13 +13,16 @@
                 $("form").submit();
             }
         }
-        var btn = document.getElementById('save');
+        var btn = document.getElementById('saverule');
         btn.addEventListener("click", post(), false);
         function post() {
             document.form1.action = "{% block rule_post %}{% endblock %}";
             $("form").submit();
         }
+
     </script>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/fileinput.min.css') }}">
+    <script src="{{ url_for('static',filename='js/fileinput.min.js') }}" async></script>
 {% endblock %}
 
 {% block main %}
@@ -34,6 +37,22 @@
         {% endif %}
     {% endwith %}
     <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8" id="importrule">
+                <div class="form-group">
+                    <label>Import from file:</label>
+                    <form action="/newrule/import" enctype='multipart/form-data' method='POST'>
+                        <input id="input-b1" name="input-b1" type="file" class="file">
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-4" id="exportrule">
+                <div class="form-group">
+                    <label></label>
+                    <button class="btn btn-primary btn-block" name="export" id="export">Export</button>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <!--left-->
             <form name="form1" action="" method="POST">
@@ -64,9 +83,8 @@
                         <script>$(".form-control").find("option[value='{{ ruleid }}']").attr("selected",true)</script>
                     </div>
                     <div class="form-group">
-                        <button class="btn btn-primary btn-block" name="saverule" onclick="post()">{% block rule_btn %}{% endblock %}</button>
+                        <button class="btn btn-primary btn-block" name="saverule" id="saverule" onclick="post()">{% block rule_btn %}{% endblock %}</button>
                     </div>
-
                 </div><!--/left-->
                 <!--right-->
                 <div class="col-md-5" id="midCol">
@@ -87,5 +105,6 @@
                 </div><!--/right-->
             </form>
         </div><!--/row-->
+
     </div><!--/container-->
 {% endblock %}

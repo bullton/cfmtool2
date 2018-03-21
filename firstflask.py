@@ -201,12 +201,41 @@ def static_bar_one_column(data, title):
     return filename
 
 
+def uploadfile(uf, returnpage):
+    file_dir = os.path.join(basedir, app.config['UPLOAD_FOLDER'])
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
+    if uf and allowed_file(uf.filename):
+        # size = len(uf.read())
+        size = 1
+        if size < 51200000:
+            filename = secure_filename(uf.filename)
+            # currentpath = os.path.abspath(os.path.dirname(__file__))
+            # ossep = os.path.sep
+            ext = filename.rsplit('.', 1)[1]
+            name = filename.rsplit('.', 1)[0]
+            unix_time = int(time.time())
+            new_filename = name + '_' + str(unix_time) + '.' + ext
+            # savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
+            savepath = os.path.join(file_dir, new_filename)
+            # uf.save(savepath)
+            uf.save(savepath)
+            return savepath, new_filename
+        else:
+            flash(u'error:File size should less than 50M')
+            return redirect(url_for(returnpage))
+    else:
+        flash(u'error:File type should be xls or xlsx')
+        return redirect(url_for(returnpage))
 
 
 
 rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
 rulekey2 = OrderedDict([('customer_feature_black','customer_feature_black'),('customer_care_function','customer_care_function'),('customer_rru','customer_rru'),('customer_keyword_black','customer_keyword_black'),('category_search_field','category_search_field'),('uuf_exclusion','uuf_exclusion'),('kpi_exclusion','kpi_exclusion'),('ca_exclusion','ca_exclusion'),('oamstab_exclusion','oamstab_exclusion'),('pet_exclusion','pet_exclusion'),('func_exclusion','func_exclusion'),('customer_pronto_black','customer_pronto_black'),('r3bbu','r3bbu'),('ftcomsc','ftcomsc')])
 
+rulekeydic = {
+
+}
 
 @app.route('/')
 @app.route('/index/')
@@ -518,6 +547,17 @@ def newref():
     return render_template('newrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 
+@app.route('/newrule/import/',methods=['POST'], strict_slashes=False)
+@login_require
+def newimport():
+    uf = request.files['input-b1']
+    savepath, new_filename = uploadfile(uf, 'newrule')
+    flash(savepath)
+    data = pd.read_excel(savepath)
+    return redirect(url_for('newrule'))
+    # return render_template('newrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
+
+
 @app.route('/delrule/',methods=['GET','POST'])
 @login_require
 def delrule():
@@ -608,44 +648,21 @@ def logout():
 @app.route('/upload/', methods = ['POST'],strict_slashes=False)
 def upload():
     uf = request.files['input-b1']
-    file_dir=os.path.join(basedir,app.config['UPLOAD_FOLDER'])
-    if not os.path.exists(file_dir):
-        os.makedirs(file_dir)
-    if uf and allowed_file(uf.filename):                       
-        # size = len(uf.read())
-        size = 1                               
-        if size<51200000:          
-            filename = secure_filename(uf.filename)
-            # currentpath = os.path.abspath(os.path.dirname(__file__))
-            # ossep = os.path.sep
-            ext = filename.rsplit('.',1)[1]
-            name = filename.rsplit('.',1)[0]
-            unix_time = int(time.time())
-            new_filename=name + '_' + str(unix_time)+'.'+ext
-            # savepath = currentpath + ossep+'uploadfolder'+ ossep + filename
-            savepath = os.path.join(file_dir,new_filename)
-            # uf.save(savepath)
-            uf.save(savepath)
-            source = Source(path=savepath,filename=new_filename)
-            user_id = session.get('user_id')
-            user = User.query.filter(User.id == user_id).first()
-            source.owner = user
-            try:                                                
-                db.session.add(source)
-                db.session.commit()
-            except Exception as reason:
-                s=str(reason)                                    
-                list = re.split(r'[()]+', s)                    
-                flash(u'Upload Failed：(%s)(%%s)'%list[1]%list[3])
-                return redirect(url_for('index'))
-            else:
-                flash(u'Upload Succ')
-                return redirect(url_for('index'))
-        else:
-            flash(u'error:File size should less than 50M')
-            return redirect(url_for('index'))
+    savepath, new_filename = uploadfile(uf, 'index')
+    source = Source(path=savepath,filename=new_filename)
+    user_id = session.get('user_id')
+    user = User.query.filter(User.id == user_id).first()
+    source.owner = user
+    try:
+        db.session.add(source)
+        db.session.commit()
+    except Exception as reason:
+        s=str(reason)
+        list = re.split(r'[()]+', s)
+        flash(u'Upload Failed：(%s)(%%s)'%list[1]%list[3])
+        return redirect(url_for('index'))
     else:
-        flash(u'error:File type should be xls or xlsx')
+        flash(u'Upload Succ')
         return redirect(url_for('index'))
 
 @app.context_processor
