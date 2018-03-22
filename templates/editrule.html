@@ -7,3 +7,16 @@
 {% block rule_post %}/editrule/{% endblock %}
 
 {% block rule_btn %}Save{% endblock %}
+
+{% block export_rule %}
+    <div class="row">
+        <div class="col-md-2" id="exportrule">
+            <div class="form-group">
+                <label>Export to file:</label>
+                <button class="btn btn-primary btn-block" name="export" id="export">Export</button>
+            </div>
+        </div>
+        <div class="col-md-10">
+        </div>
+    </div>
+{% endblock %}

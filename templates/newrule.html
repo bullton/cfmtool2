@@ -11,3 +11,19 @@
 {% block rule_btn_import %}Import{% endblock %}
 
 {% block rule_import %}Import{% endblock %}
+
+{% block import_rule %}
+    <div class="row">
+        <div class="col-md-6" id="importrule">
+            <div class="form-group">
+                <label>Import from file:</label>
+                <form action="/newrule/import" enctype='multipart/form-data' method='POST'>
+                    <input id="input-b1" name="input-b1" type="file" class="file">
+                </form>
+            </div>
+        </div>
+        <div class="col-md-6">
+        </div>
+    </div>
+{% endblock %}
+

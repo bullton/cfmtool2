@@ -234,7 +234,29 @@ rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('cu
 rulekey2 = OrderedDict([('customer_feature_black','customer_feature_black'),('customer_care_function','customer_care_function'),('customer_rru','customer_rru'),('customer_keyword_black','customer_keyword_black'),('category_search_field','category_search_field'),('uuf_exclusion','uuf_exclusion'),('kpi_exclusion','kpi_exclusion'),('ca_exclusion','ca_exclusion'),('oamstab_exclusion','oamstab_exclusion'),('pet_exclusion','pet_exclusion'),('func_exclusion','func_exclusion'),('customer_pronto_black','customer_pronto_black'),('r3bbu','r3bbu'),('ftcomsc','ftcomsc')])
 
 rulekeydic = {
-
+    'customer_feature_white': 'ArrOptusCaredFeatureList',
+    'customer_feature_black': 'ArrOptusFeatureBlackList',
+    'customer_top_fault': 'ArrOptusTopFaultList',
+    'customer_rru': 'RRUType',
+    'customer_care_function': 'OptusCareFunctionTag',
+    'r4bbu': 'BBUType1',
+    'r3bbu': 'BBUType2',
+    'uuf_filter': 'UUFFilterStringsOverview',
+    'kpi_filter': 'KPIFilterStringsOverview',
+    'ca_filter': 'CAFilterStringsOverview',
+    'oamstab_filter': 'OAMStabFilterStringsOverview',
+    'pet_filter': 'PETStabFilterStringsOverview',
+    'func_filter': 'FuncFilterStringsOverview',
+    'category_tag': 'CategoryTag',
+    'customer_bbu': 'BBUTypeTag',
+    'customer_keyword_white': 'KeyWordsPRTitle',
+    'customer_pronto_white': 'ArrOptusPRIDWhiteList',
+    'customer_pronto_black': 'ArrOptusPRIDBlackList',
+    'customer_keyword_black': 'ArrOptusKeyWordBlackList',
+    'ftcomsc': 'ArrFComSc',
+    'fdd_exclude_feature': 'ArrFExcluFea',
+    'customer_exclude_group': 'ArrIgnoreGroups',
+    'customer_exclude_release': 'ArrIgnoreRelease'
 }
 
 @app.route('/')
@@ -553,8 +575,22 @@ def newimport():
     uf = request.files['input-b1']
     savepath, new_filename = uploadfile(uf, 'newrule')
     flash(savepath)
-    data = pd.read_excel(savepath)
-    return redirect(url_for('newrule'))
+    data = pd.read_excel(savepath, dtype='str')
+    data[data == 'nan'] = np.nan
+    key1 = OrderedDict()
+    key2 = OrderedDict()
+    for k in rulekey1.keys():
+        if rulekeydic.has_key(k):
+            key1[k] = ','.join(data[rulekeydic[k]].dropna())
+        else:
+            key1[k] = ''
+    for k in rulekey2.keys():
+        if rulekeydic.has_key(k):
+            key2[k] = ','.join(data[rulekeydic[k]].dropna())
+        else:
+            key2[k] = ''
+    #return redirect(url_for('newrule'))
+    return render_template('newrule.html', key1=key1, key2=key2)
     # return render_template('newrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 
