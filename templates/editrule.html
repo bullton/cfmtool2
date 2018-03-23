@@ -10,13 +10,25 @@
 
 {% block export_rule %}
     <div class="row">
-        <div class="col-md-2" id="exportrule">
-            <div class="form-group">
-                <label>Export to file:</label>
-                <button class="btn btn-primary btn-block" name="export" id="export">Export</button>
-            </div>
-        </div>
-        <div class="col-md-10">
-        </div>
+    	<form name="form2" action="/exportrule/" method="POST">
+	        <div class="col-md-2" id="exportrule">
+	            <label>Export to file:</label>
+	        </div>
+	        
+	        <div class="col-md-8">
+	        	<select class="form-control" name="ruleid2" id="ruleid2">
+                    <option value=""></option>
+                        {% for userrule in userrules %}
+                            <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
+                        {% endfor %}
+                </select>
+                <script>$(".form-control").find("option[value='{{ ruleid }}']").attr("selected",true)</script>
+	        </div>
+	        <div class="col-md-2">
+	        	<div class="form-group">
+	                <button class="btn btn-primary btn-block" name="export" id="export" type="submit">Export</button>
+	            </div>
+        	</div>
+    	</form>
     </div>
 {% endblock %}

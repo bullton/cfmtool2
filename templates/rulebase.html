@@ -10,7 +10,7 @@
         function show() {
             if($("select[name='ruleid']").find("option:selected").val() != '' ){
                 document.form1.action = "{% block rule_show %}{% endblock %}";
-                $("form").submit();
+                document.forms['form1'].submit();
             }
         }
         var btn = document.getElementById('saverule');
