@@ -229,7 +229,7 @@ def uploadfile(uf, returnpage):
         return redirect(url_for(returnpage))
 
 
-rulekey = ('customer_feature_white',' customer_feature_black','customer_top_fault','customer_care_function','uuf_filter','uuf_exclusion','kpi_filter','kpi_exclusion','ca_filter','ca_exclusion','oamstab_filter','oamstab_exclusion','pet_filter','pet_exclusion','func_filter','func_exclusion','category_search_field','category_tag','customer_rru','customer_bbu','customer_keyword_white','customer_keyword_black','customer_pronto_white','customer_pronto_black','r4bbu','r3bbu','r2bbu','fsih','ftcomsc')
+rulekey = ('customer_feature_white','customer_feature_black','customer_top_fault','customer_care_function','uuf_filter','uuf_exclusion','kpi_filter','kpi_exclusion','ca_filter','ca_exclusion','oamstab_filter','oamstab_exclusion','pet_filter','pet_exclusion','func_filter','func_exclusion','category_search_field','category_tag','customer_rru','customer_bbu','customer_keyword_white','customer_keyword_black','customer_pronto_white','customer_pronto_black','r4bbu','r3bbu','ftcomsc')
 rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
 rulekey2 = OrderedDict([('customer_feature_black','customer_feature_black'),('customer_care_function','customer_care_function'),('customer_rru','customer_rru'),('customer_keyword_black','customer_keyword_black'),('category_search_field','category_search_field'),('uuf_exclusion','uuf_exclusion'),('kpi_exclusion','kpi_exclusion'),('ca_exclusion','ca_exclusion'),('oamstab_exclusion','oamstab_exclusion'),('pet_exclusion','pet_exclusion'),('func_exclusion','func_exclusion'),('customer_pronto_black','customer_pronto_black'),('r3bbu','r3bbu'),('ftcomsc','ftcomsc')])
 
@@ -562,14 +562,22 @@ def exportrule():
     ruleid = request.form.get('ruleid2')
     rule = Rule.query.filter(Rule.id == ruleid).first()
     df = pd.DataFrame()
-    print vars(rule)
+    #print 'rule',vars(rule)
+    #print rulekeydic2
     for col in rulekey:
-        df[rulekeydic2[col]] = vars(rule)[col]
+        #print 'col=',col
+        value = vars(rule)[col].split(',')
+        #print 'value',value
+        #df[col] = value
+        s = pd.Series(value)
+        #print s
+        df = pd.concat([df, pd.DataFrame({col: s})], axis=1)
     export_path = os.path.join(basedir, app.config['EXPORT_FOLDER'])
     unix_time = int(time.time())
     filename = str(unix_time) + '.xls'
     fullpath = os.path.join(export_path,filename)
-    data.to_excel(fullpath)
+    print df
+    df.to_excel(fullpath)
     return send_from_directory(export_path, filename, as_attachment=True)
 
 
@@ -601,12 +609,22 @@ def newimport():
     key2 = OrderedDict()
     for k in rulekey1.keys():
         if rulekeydic.has_key(k):
-            key1[k] = ','.join(data[rulekeydic[k]].dropna())
+            try:
+                key1[k] = ','.join(data[rulekeydic[k]].dropna())
+            except KeyError:
+                key1[k] = ','.join(data[k].dropna())
+            else:
+                pass
         else:
             key1[k] = ''
     for k in rulekey2.keys():
         if rulekeydic.has_key(k):
-            key2[k] = ','.join(data[rulekeydic[k]].dropna())
+            try:
+                key2[k] = ','.join(data[rulekeydic[k]].dropna())
+            except KeyError:
+                key2[k] = ','.join(data[k].dropna())
+            else:
+                pass
         else:
             key2[k] = ''
     #return redirect(url_for('newrule'))
