@@ -1,0 +1,791 @@
+{% extends 'base.html' %}
+
+{% block title %}Rules{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/fileinput.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/parameter.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" >
+    <script src="{{ url_for('static',filename='js/fileinput.min.js') }}" async></script>
+    <script src="{{ url_for('static',filename='js/jquery.session.js') }}" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+
+{% endblock %}
+
+{% block main %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message[0] }} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <li>{{ message[1] }}</li>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div class="container-fluid">
+        <div class="row">
+            <!--left-->
+            <form name="form1" action="" method="POST">
+                <div class="col-md-2" id="leftCol">
+                    <div class="form-group">
+                        <label>Rule Name:</label>
+                        <input type="text" class="form-control name" placeholder="rule name" name="rulename" >
+                    </div>
+                    <div class="form-group">
+                        <label>Release:</label>
+                        <input type="text" class="form-control release" placeholder="release" name="release" >
+                    </div>
+                    <div class="form-group">
+                        <label>Customer:</label>
+                        <input type="text" class="form-control customer" placeholder="customer" name="customer" >
+                    </div>
+                    <div class="form-group">
+                        <hr>
+                    </div>
+                    <div class="form-group left-pannel">
+                        <label>Select Use Parameters:</label>
+                        <select class="form-control paraid" name="paraid" id="paraid">
+                            <option value=""></option>
+                            {% for userparameter in userparameters %}
+                                <option value="{{ userparameter.id }}">{{ userparameter.name+'@'+userparameter.release }}</option>
+                            {% endfor %}
+                        </select>
+                        <script>$(".form-control").find("option[value='{{ paraid }}']").attr("selected",true)</script>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Rules:</label>
+                        <select class="form-control selectrule" name="ruleid" id="ruleid">
+                            <option value=""></option>
+                            {% for userrule in userrules %}
+                                <option value="{{ userrule.id }}">{{ userrule.rulename+'@'+userrule.release }}</option>
+                            {% endfor %}
+                        </select>
+                        <script>$(".form-control").find("option[value='{{ ruleid }}']").attr("selected",true)</script>
+                    </div>
+                    <div class="form-group buttonpost">
+                        <button class="btn btn-primary btn-block save" name="saverule" id="saverule"  type="button">Save</button>
+                    </div>
+                </div><!--/left-->
+                <!--right-->
+                <div class="col-md-10 parameter" id="rightCol">
+                    <ul>
+                        <label class="con con1" contenteditable="true" placeholder="Enter rule title here..." style="font-size:24px;"></label>
+                        <button type="button" class="btn btn-primary addSub">Add Subrule</button>
+                        <button type="button" class="btn btn-danger delSub">Delete</button>
+                        <button type="button" class="btn btn-success upSub">Up</button>
+                        <button type="button" class="btn btn-info downSub">Down</button>
+                        <li>
+                            <span>
+                                <select class="paraname">
+                                    <option>R4BBU</option>
+                                    <option>R3BBU</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                    <option>5</option>
+                                </select>
+                            </span>
+                            <span>
+                                <select class="condition">
+                                  <option>IN</option>
+                                  <option>NOT IN</option>
+                                  <option>3</option>
+                                  <option>4</option>
+                                  <option>5</option>
+                                </select>
+                            </span>
+                            <span>
+                                <select class="field">
+                                  <option>Field1</option>
+                                  <option>Field2</option>
+                                  <option>3</option>
+                                  <option>4</option>
+                                  <option>5</option>
+                                </select>
+                                <button id="addField" type="button" class="btn btn-primary btn-sm addField">Add</button>
+                                <button id="delField" type="button" class="btn btn-danger btn-sm delField">Del</button>
+                            </span>
+                            <span class="spreturn">
+                                <select class="return">
+                                  <option>Self Define</option>
+                                  <option selected = "selected">As Parameter</option>
+                                  <option>True</option>
+                                  <option>False</option>
+                                </select>
+                            </span>
+                            <span>
+                                <button id="addPara" type="button" class="btn btn-primary btn-sm addPara">Add Para</button>
+                                <button id="delPara" type="button" class="btn btn-danger btn-sm delPara">Del Para</button>
+                                <button id="up" type="button" class="btn btn-success btn-sm upPara">Up</button>
+                                <button id="down" type="button" class="btn btn-info btn-sm downPara">Down</button>
+                                <button id="addParasub" type="button" class="btn btn-primary btn-sm addParasub">Add Subpara</button>
+                            </span>
+                        </li>
+                    </ul>
+                </div><!--/right-->
+            </form>
+        </div><!--/row-->
+    </div><!--/container-->
+    <script>
+        var substep = "<ul>\n" +
+            "                        <label class=\"con\" contenteditable=\"true\" placeholder=\"Enter rule title here...\" style=\"font-size:24px;\"></label>\n" +
+            "                        <button type=\"button\" class=\"btn btn-primary addSub\">Add Subrule</button>\n" +
+            "                        <button type=\"button\" class=\"btn btn-danger delSub\">Delete</button>\n" +
+            "                        <button type=\"button\" class=\"btn btn-success upSub\">Up</button>\n" +
+            "                        <button type=\"button\" class=\"btn btn-info downSub\">Down</button>\n" +
+            "                        <li>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"paraname\">\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"condition\">\n" +
+            "                                  <option>IN</option>\n" +
+            "                                  <option>NOT IN</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"field\">\n" +
+            "                                  <option>Field1</option>\n" +
+            "                                  <option>Field2</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                                <button id=\"addField\" type=\"button\" class=\"btn btn-primary btn-sm addField\">Add</button>\n" +
+            "                                <button id=\"delField\" type=\"button\" class=\"btn btn-danger btn-sm delField\">Del</button>\n" +
+            "                            </span>\n" +
+            "                            <span class=\"spreturn\">\n" +
+            "                                <select class=\"return\">\n" +
+            "                                  <option>Self Define</option>\n" +
+            "                                  <option selected = \"selected\">As Parameter</option>\n" +
+            "                                  <option>True</option>\n" +
+            "                                  <option>False</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <button id=\"addPara\" type=\"button\" class=\"btn btn-primary btn-sm addPara\">Add Para</button>\n" +
+            "                                <button id=\"delPara\" type=\"button\" class=\"btn btn-danger btn-sm delPara\">Del Para</button>\n" +
+            "                                <button id=\"up\" type=\"button\" class=\"btn btn-success btn-sm upPara\">Up</button>\n" +
+            "                                <button id=\"down\" type=\"button\" class=\"btn btn-info btn-sm downPara\">Down</button>\n" +
+            "                                <button id=\"addParasub\" type=\"button\" class=\"btn btn-primary btn-sm addParasub\">Add Subpara</button>\n" +
+            "                            </span>\n" +
+            "\n" +
+            "                        </li>\n" +
+            "                    </ul>";
+        var para = "<li>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"paraname\">\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"condition\">\n" +
+            "                                  <option>IN</option>\n" +
+            "                                  <option>NOT IN</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"field\">\n" +
+            "                                  <option>Field1</option>\n" +
+            "                                  <option>Field2</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                                <button id=\"addField\" type=\"button\" class=\"btn btn-primary btn-sm addField\">Add</button>\n" +
+            "                                <button id=\"delField\" type=\"button\" class=\"btn btn-danger btn-sm delField\">Del</button>\n" +
+            "                            </span>\n" +
+            "                            <span class=\"spreturn\">\n" +
+            "                                <select class=\"return\">\n" +
+            "                                  <option>Self Define</option>\n" +
+            "                                  <option selected = \"selected\">As Parameter</option>\n" +
+            "                                  <option>True</option>\n" +
+            "                                  <option>False</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <button id=\"addPara\" type=\"button\" class=\"btn btn-primary btn-sm addPara\">Add Para</button>\n" +
+            "                                <button id=\"delPara\" type=\"button\" class=\"btn btn-danger btn-sm delPara\">Del Para</button>\n" +
+            "                                <button id=\"up\" type=\"button\" class=\"btn btn-success btn-sm upPara\">Up</button>\n" +
+            "                                <button id=\"down\" type=\"button\" class=\"btn btn-info btn-sm downPara\">Down</button>\n" +
+            "                                <button id=\"addParasub\" type=\"button\" class=\"btn btn-primary btn-sm addParasub\">Add Subpara</button>\n" +
+            "                            </span>\n" +
+            "\n" +
+            "                        </li>";
+        var field = "<select class=\"field\">\n" +
+            "                              <option>Field1</option>\n" +
+            "                              <option>Field2</option>\n" +
+            "                              <option>3</option>\n" +
+            "                              <option>4</option>\n" +
+            "                              <option>5</option>\n" +
+            "                            </select>";
+        var btnfield = "<button id=\"addField\" type=\"button\" class=\"btn btn-primary btn-sm addField\">Add Field</button>\n" +
+            "                            <button id=\"delField\" type=\"button\" class=\"btn btn-danger btn-sm delField\">Del Field</button>";
+        var parasub = "<ul>\n" +
+            "                                <li>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subcondition\">\n" +
+            "                                            <option>AND</option>\n" +
+            "                                            <option>AND NOT</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subparaname\">\n" +
+            "                                          <option>Parameters</option>\n" +
+            "                                          <option>Category</option>\n" +
+            "                                          <option>3</option>\n" +
+            "                                          <option>4</option>\n" +
+            "                                          <option>5</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"expression\">\n" +
+            "                                          <option>=</option>\n" +
+            "                                          <option>!=</option>\n" +
+            "                                          <option>\\></option>\n" +
+            "                                          <option>include</option>\n" +
+            "                                          <option>exclude</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                    <input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" >\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <button id=\"add\" type=\"button\" class=\"btn btn-primary btn-sm add\">Add</button>\n" +
+            "                                        <button id=\"del\" type=\"button\" class=\"btn btn-danger btn-sm del\">Del</button>\n" +
+            "                                    </span>\n" +
+            "                                </li>\n" +
+            "                            </ul>";
+        var parasub2 = "<li>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subcondition\">\n" +
+            "                                            <option>AND</option>\n" +
+            "                                            <option>AND NOT</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subparaname\">\n" +
+            "                                          <option>Parameters</option>\n" +
+            "                                          <option>Category</option>\n" +
+            "                                          <option>3</option>\n" +
+            "                                          <option>4</option>\n" +
+            "                                          <option>5</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"expression\">\n" +
+            "                                          <option>=</option>\n" +
+            "                                          <option>!=</option>\n" +
+            "                                          <option>\\></option>\n" +
+            "                                          <option>include</option>\n" +
+            "                                          <option>exclude</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                    <input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" >\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <button id=\"add\" type=\"button\" class=\"btn btn-primary btn-sm add\">Add</button>\n" +
+            "                                        <button id=\"del\" type=\"button\" class=\"btn btn-danger btn-sm del\">Del</button>\n" +
+            "                                    </span>\n" +
+            "                                </li>";
+        $(document).ready(function(){
+            $('.paraname').empty();
+            $.session.clear();
+            $('.parameter').on('click','.delSub', function(){
+                $(this).parent('ul').remove();
+            });
+            $(".parameter").on("click",".addSub",function(){
+                if ($.session.get('paradata'))
+                {
+                    var addselect = "";
+                    $.each(JSON.parse($.session.get('paradata')),function(name,value) {
+                        //$(this).siblings('.paraname').append("<option>"+name+"</option>");
+                        addselect = addselect + "<option>"+name+"</option>"
+                    });
+                    addselect = "<ul>\n" +
+            "                        <label class=\"con\" contenteditable=\"true\" placeholder=\"Enter rule title here...\" style=\"font-size:24px;\"></label>\n" +
+            "                        <button type=\"button\" class=\"btn btn-primary addSub\">Add Subrule</button>\n" +
+            "                        <button type=\"button\" class=\"btn btn-danger delSub\">Delete</button>\n" +
+            "                        <button type=\"button\" class=\"btn btn-success upSub\">Up</button>\n" +
+            "                        <button type=\"button\" class=\"btn btn-info downSub\">Down</button>\n" +
+            "                        <li>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"paraname\">\n" + addselect +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"condition\">\n" +
+            "                                  <option>IN</option>\n" +
+            "                                  <option>NOT IN</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"field\">\n" +
+            "                                  <option>Field1</option>\n" +
+            "                                  <option>Field2</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                                <button id=\"addField\" type=\"button\" class=\"btn btn-primary btn-sm addField\">Add</button>\n" +
+            "                                <button id=\"delField\" type=\"button\" class=\"btn btn-danger btn-sm delField\">Del</button>\n" +
+            "                            </span>\n" +
+            "                            <span class=\"spreturn\">\n" +
+            "                                <select class=\"return\">\n" +
+            "                                  <option>Self Define</option>\n" +
+            "                                  <option selected = \"selected\">As Parameter</option>\n" +
+            "                                  <option>True</option>\n" +
+            "                                  <option>False</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <button id=\"addPara\" type=\"button\" class=\"btn btn-primary btn-sm addPara\">Add Para</button>\n" +
+            "                                <button id=\"delPara\" type=\"button\" class=\"btn btn-danger btn-sm delPara\">Del Para</button>\n" +
+            "                                <button id=\"up\" type=\"button\" class=\"btn btn-success btn-sm upPara\">Up</button>\n" +
+            "                                <button id=\"down\" type=\"button\" class=\"btn btn-info btn-sm downPara\">Down</button>\n" +
+            "                                <button id=\"addParasub\" type=\"button\" class=\"btn btn-primary btn-sm addParasub\">Add Subpara</button>\n" +
+            "                            </span>\n" +
+            "\n" +
+            "                        </li>\n" +
+            "                    </ul>";
+                    $(addselect).insertAfter($(this).parents('ul').first());
+                }
+                else
+                {
+                    $(substep).insertAfter($(this).parents('ul').first());
+                }
+
+            });
+            $(".parameter").on("click",".addPara",function(){
+
+                if ($.session.get('paradata'))
+                {
+                    var addselect = "";
+                    $.each(JSON.parse($.session.get('paradata')),function(name,value) {
+                        //$(this).siblings('.paraname').append("<option>"+name+"</option>");
+                        addselect = addselect + "<option>"+name+"</option>"
+                    });
+                    addselect = "<li>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"paraname\">\n" +addselect+
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"condition\">\n" +
+            "                                  <option >IN</option>\n" +
+            "                                  <option>NOT IN</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <select class=\"field\">\n" +
+            "                                  <option>Field1</option>\n" +
+            "                                  <option>Field2</option>\n" +
+            "                                  <option>3</option>\n" +
+            "                                  <option>4</option>\n" +
+            "                                  <option>5</option>\n" +
+            "                                </select>\n" +
+            "                                <button id=\"addField\" type=\"button\" class=\"btn btn-primary btn-sm addField\">Add</button>\n" +
+            "                                <button id=\"delField\" type=\"button\" class=\"btn btn-danger btn-sm delField\">Del</button>\n" +
+            "                            </span>\n" +
+            "                            <span class=\"spreturn\">\n" +
+            "                                <select class=\"return\">\n" +
+            "                                  <option>Self Define</option>\n" +
+            "                                  <option selected = \"selected\">As Parameter</option>\n" +
+            "                                  <option>True</option>\n" +
+            "                                  <option>False</option>\n" +
+            "                                </select>\n" +
+            "                            </span>\n" +
+            "                            <span>\n" +
+            "                                <button id=\"addPara\" type=\"button\" class=\"btn btn-primary btn-sm addPara\">Add Para</button>\n" +
+            "                                <button id=\"delPara\" type=\"button\" class=\"btn btn-danger btn-sm delPara\">Del Para</button>\n" +
+            "                                <button id=\"up\" type=\"button\" class=\"btn btn-success btn-sm upPara\">Up</button>\n" +
+            "                                <button id=\"down\" type=\"button\" class=\"btn btn-info btn-sm downPara\">Down</button>\n" +
+            "                                <button id=\"addParasub\" type=\"button\" class=\"btn btn-primary btn-sm addParasub\">Add Subpara</button>\n" +
+            "                            </span>\n" +
+            "\n" +
+            "                        </li>";
+                    $(addselect).insertAfter($(this).parents('li').first());
+                }
+                else
+                {
+                    $(para).insertAfter($(this).parents('li').first());
+                }
+            });
+            $('.parameter').on('click','.addField', function(){
+                $(field).insertBefore($(this));
+            });
+            $('.parameter').on('click','.delField', function(){
+                $(this).prev().prev().remove();
+            });
+            $('.parameter').on('click','.delPara', function(){
+                $(this).parents('li').remove();
+            });
+            $('.parameter').on('click','.upPara', function(){
+                $(this).parents('li').insertBefore($(this).parents('li').prev());
+            });
+            $('.parameter').on('click','.downPara', function(){
+                $(this).parents('li').insertAfter($(this).parents('li').next());
+            });
+            $('.parameter').on('click','.upSub', function(){
+                $(this).parents('ul').insertBefore($(this).parents('ul').prev());
+            });
+            $('.parameter').on('click','.downSub', function(){
+                $(this).parents('ul').insertAfter($(this).parents('ul').next());
+            });
+            $(".parameter").on("click",".addParasub",function(){
+                if ($.session.get('paradata'))
+                {
+                    var addselect = "";
+                    $.each(JSON.parse($.session.get('paradata')),function(name,value) {
+                        //$(this).siblings('.paraname').append("<option>"+name+"</option>");
+                        addselect = addselect + "<option>"+name+"</option>"
+                    });
+                    addselect = "<ul>\n" +
+            "                                <li>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subcondition\">\n" +
+            "                                            <option>AND</option>\n" +
+            "                                            <option>AND NOT</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subparaname\">\n" + addselect +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"expression\">\n" +
+            "                                          <option>=</option>\n" +
+            "                                          <option>!=</option>\n" +
+            "                                          <option>\\></option>\n" +
+            "                                          <option>include</option>\n" +
+            "                                          <option>exclude</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                    <input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" >\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <button id=\"add\" type=\"button\" class=\"btn btn-primary btn-sm add\">Add</button>\n" +
+            "                                        <button id=\"del\" type=\"button\" class=\"btn btn-danger btn-sm del\">Del</button>\n" +
+            "                                    </span>\n" +
+            "                                </li>\n" +
+            "                            </ul>";
+                    $(this).parents("li").append($(addselect));
+                }
+                else
+                {
+                    $(this).parents("li").append($(parasub));
+                }
+            });
+            $(".parameter").on("click",".add",function(){
+                if ($.session.get('paradata'))
+                {
+                    var addselect = "";
+                    $.each(JSON.parse($.session.get('paradata')),function(name,value) {
+                        //$(this).siblings('.paraname').append("<option>"+name+"</option>");
+                        addselect = addselect + "<option>"+name+"</option>"
+                    });
+                    addselect = "<li>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subcondition\">\n" +
+            "                                            <option>AND</option>\n" +
+            "                                            <option>AND NOT</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"subparaname\">\n" + addselect +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <select class=\"expression\">\n" +
+            "                                          <option>=</option>\n" +
+            "                                          <option>!=</option>\n" +
+            "                                          <option>\\></option>\n" +
+            "                                          <option>include</option>\n" +
+            "                                          <option>exclude</option>\n" +
+            "                                        </select>\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                    <input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" >\n" +
+            "                                    </span>\n" +
+            "                                    <span>\n" +
+            "                                        <button id=\"add\" type=\"button\" class=\"btn btn-primary btn-sm add\">Add</button>\n" +
+            "                                        <button id=\"del\" type=\"button\" class=\"btn btn-danger btn-sm del\">Del</button>\n" +
+            "                                    </span>\n" +
+            "                                </li>";
+                    $(this).parents("ul").first().append($(addselect));
+                }
+                else
+                {
+                    $(this).parents("ul").first().append($(parasub2));
+                }
+            });
+            $(".parameter").on("click",".del",function(){
+                $(this).parents("li").first().remove()
+            });
+            $(".paraid").change(function(){
+
+                var pid = $("select[name='paraid']").find("option:selected").val();
+                if (pid!="")
+                {
+                    $.ajax({
+                      type: "post",
+                      url: '/querypara/',
+                      data:{"pid":pid},
+                      dataType: 'json',
+                      success: function (data) {
+                          var jsondata = JSON.parse(data["parameter"]);
+                          $('.paraname').empty();
+                          $.each(jsondata,function(name,value) {
+                              $('.paraname').append("<option>"+name+"</option>");
+                          });
+                          $.session.set('paradata', data["parameter"]);
+                      }
+                    });
+                }
+            });
+
+            $(".parameter").on("change",".return",function(){
+                var selectreturnoption = $(this).find("option:selected").text();
+                var input = "<input type=\"text\" class=\"selfdefine\" placeholder=\"input you return value\" name=\"selfdefine\" >";
+                if (selectreturnoption == "Self Define")
+                {
+                    $(input).insertAfter($(this));
+                }
+                else
+                {
+                    $(this).siblings(".selfdefine").remove();
+                }
+            });
+            $(".buttonpost").on("click",".save",function(){
+                var json = {};
+                json['rulename'] = $(".name").val();
+                json['release'] = $(".release").val();
+                json['customer'] = $(".customer").val();
+                json['rule'] = [];
+                $("div.parameter").children("ul").each(function(i, val){
+                    var rule = {};
+                    var title = $(this).children("label").text()
+                    rule['title'] = title;
+                    rule['parameters'] = [];
+                    $(this).children('li').each(function(j, value){
+                        var parameter = {};
+                        parameter['paraname'] = $(this).children().children('.paraname').find("option:selected").text();
+                        parameter['condition'] = $(this).children().children('.condition').find("option:selected").text();
+                        parameter['seachfield'] = [];
+                        $(this).children().children('.field').each(function(){
+                            parameter['seachfield'].push($(this).find("option:selected").text());
+                        });
+                        parameter['return'] = $(this).children().children('.return').find("option:selected").text();
+                        parameter['return value'] = $(this).children().children('.selfdefine').val();
+                        parameter['subparameter'] = [];
+                        $(this).children('ul').children('li').each(function(k, v){
+                            var subparameter = {};
+                            subparameter['subcondition'] = $(this).children().children('.subcondition').find("option:selected").text();
+                            subparameter['subparaname'] = $(this).children().children('.subparaname').find("option:selected").text();
+                            subparameter['expression'] = $(this).children().children('.expression').find("option:selected").text();
+                            subparameter['parasubvalue'] = $(this).children().children('.parasubvalue').val();
+                            parameter['subparameter'].push(subparameter);
+                        });
+                        rule['parameters'].push(parameter);
+                    });
+                    json['rule'][i] = rule;
+                  });
+                //var name = $(this).siblings("input#name").val();
+                var name = $(".name").val();
+                var release = $(".release").val();
+                var customer = $(".customer").val();
+                var postdata = {
+                    "postdata":JSON.stringify(json),
+                    "name":name,
+                    "release":release,
+                    "customer":customer,
+                    "parameter": $("select[name='paraid']").find("option:selected").val()
+                };
+                alert(JSON.stringify(json));
+                $.ajax({
+                  type: "post",
+                  url: '/rules/',
+                  data:postdata,
+                  dataType: 'json',
+                  success: function (data) {
+                      alert(data["message"])
+                  }
+                });
+            });
+            $(".selectrule").change(function(){
+                var ruleid = $("select[name='ruleid']").find("option:selected").val();
+                if (ruleid != "")
+                {
+                    $.ajax({
+                      type: "post",
+                      url: '/rules/ref/',
+                      data:{"ruleid":ruleid},
+                      dataType: 'json',
+                      success: function (data) {
+                          $(".name").val(data['name']);
+                          $(".release").val(data['release']);
+                          $(".customer").val(data['customer']);
+                          var paraid = data['paraid'];
+                          var paraoption = "";
+
+                          $.ajax({
+                              type: "post",
+                              url: '/querypara/',
+                              data:{"pid":paraid},
+                              dataType: 'json',
+                              success: function (data2) {
+                                  $(".paraid").val(paraid);
+                                  var jsondata = JSON.parse(data2["parameter"]);
+                                  $.each(jsondata,function(name,value) {
+                                      paraoption = paraoption+ "<option>" + name + "</option>\n";
+                                  });
+                                  $.session.set('paradata', data2["parameter"]);
+                                  var jsondata = JSON.parse(data["rule"])
+                                  $('.parameter').children().remove()
+                                  var rulehtml = "";
+                                  $.each(jsondata['rule'],function(i,rule) {
+                                      var parameterhtml = "";
+                                      var title = rule["title"];
+                                      $.each(rule['parameters'],function(j,parameter) {
+                                          var subparahtml = "";
+                                          var paraname = parameter['paraname'];
+                                          var paracondition = parameter['condition'];
+                                          var seachfield = parameter['seachfield'];
+                                          var retrurn_methor = parameter['return'];
+                                          var returnvalue = parameter['return value'];
+                                          var return_html = "";
+                                          var fieldhtml = "";
+                                          $(seachfield).each(function (index, obj) {
+                                              fieldhtmltmp = "<select class=\"field\">\n" +
+                    "                                  <option>Field1</option>\n" +
+                    "                                  <option>Field2</option>\n" +
+                    "                                  <option>3</option>\n" +
+                    "                                  <option>4</option>\n" +
+                    "                                  <option>5</option>\n" +
+                    "                                </select>\n";
+                                              fieldhtmltmp=fieldhtmltmp.replace("<option>"+obj+"</option>","<option selected = \"selected\">"+obj+"</option>");
+                                              fieldhtml = fieldhtml + fieldhtmltmp;
+                                          });
+
+                                          fieldhtml = fieldhtml +
+                    "                                <button id=\"addField\" type=\"button\" class=\"btn btn-primary btn-sm addField\">Add</button>\n" +
+                    "                                <button id=\"delField\" type=\"button\" class=\"btn btn-danger btn-sm delField\">Del</button>\n";
+                                          $.each(parameter['subparameter'],function(k,subparameter) {
+                                              var subcondition = subparameter['subcondition'];
+                                              var subparaname = subparameter['subparaname'];
+                                              var expression = subparameter['expression'];
+                                              var parasubvalue = subparameter['parasubvalue'];
+                                              paraoption2 = paraoption.replace("<option>" + subparaname + "</option>\n","<option selected = \"selected\">" + subparaname + "</option>\n");
+                                              htmltemp = "<li>\n" +
+                    "                                    <span>\n" +
+                    "                                        <select class=\"subcondition\">\n" +
+                    "                                            <option>AND</option>\n" +
+                    "                                            <option>AND NOT</option>\n" +
+                    "                                        </select>\n" +
+                    "                                    </span>\n" +
+                    "                                    <span>\n" +
+                    "                                        <select class=\"subparaname\">\n" + paraoption2 +
+                    "                                        </select>\n" +
+                    "                                    </span>\n" +
+                    "                                    <span>\n" +
+                    "                                        <select class=\"expression\">\n" +
+                    "                                          <option>=</option>\n" +
+                    "                                          <option>!=</option>\n" +
+                    "                                          <option>\\></option>\n" +
+                    "                                          <option>include</option>\n" +
+                    "                                          <option>exclude</option>\n" +
+                    "                                        </select>\n" +
+                    "                                    </span>\n" +
+                    "                                    <span>\n" +
+                    "                                    <input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" value=\"\">\n" +
+                    "                                    </span>\n" +
+                    "                                    <span>\n" +
+                    "                                        <button id=\"add\" type=\"button\" class=\"btn btn-primary btn-sm add\">Add</button>\n" +
+                    "                                        <button id=\"del\" type=\"button\" class=\"btn btn-danger btn-sm del\">Del</button>\n" +
+                    "                                    </span>\n" +
+                    "                                </li>";
+
+                                              htmltemp=htmltemp.replace("<option>"+subcondition+"</option>","<option selected = \"selected\">"+subcondition+"</option>");
+                                              htmltemp=htmltemp.replace("<option>"+expression+"</option>","<option selected = \"selected\">"+expression+"</option>");
+                                              htmltemp=htmltemp.replace("<input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" value=\"\">","<input type=\"text\" class=\"parasubvalue\" placeholder=\"input value\" name=\"parasubvalue\" value=\""+parasubvalue+"\">\n");
+                                              subparahtml = subparahtml + htmltemp;
+                                          });
+                                          subparahtml = "<ul>\n"+subparahtml+"\n</ul>";
+                                          if (returnvalue)
+                                          {
+                                              return_html = "<input type=\"text\" class=\"selfdefine\" placeholder=\"input you return value\" name=\"selfdefine\" value = \""+returnvalue+"\">";
+                                          }
+                                          parameterhtmltmp = "<li>\n" +
+                    "                            <span>\n" +
+                    "                                <select class=\"paraname\">\n" +paraoption +
+                    "                                </select>\n" +
+                    "                            </span>\n" +
+                    "                            <span>\n" +
+                    "                                <select class=\"condition\">\n" +
+                    "                                  <option>IN</option>\n" +
+                    "                                  <option>NOT IN</option>\n" +
+                    "                                  <option>3</option>\n" +
+                    "                                  <option>4</option>\n" +
+                    "                                  <option>5</option>\n" +
+                    "                                </select>\n" +
+                    "                            </span>\n" +
+                    "                            <span>\n" + fieldhtml +
+                    "                            </span>\n" +
+                    "                            <span class=\"spreturn\">\n" +
+                    "                                <select class=\"return\">\n" +
+                    "                                  <option>Self Define</option>\n" +
+                    "                                  <option>As Parameter</option>\n" +
+                    "                                  <option>True</option>\n" +
+                    "                                  <option>False</option>\n" +
+                    "                                </select>\n" + return_html +
+                    "                            </span>\n" +
+                    "                            <span>\n" +
+                    "                                <button id=\"addPara\" type=\"button\" class=\"btn btn-primary btn-sm addPara\">Add Para</button>\n" +
+                    "                                <button id=\"delPara\" type=\"button\" class=\"btn btn-danger btn-sm delPara\">Del Para</button>\n" +
+                    "                                <button id=\"up\" type=\"button\" class=\"btn btn-success btn-sm upPara\">Up</button>\n" +
+                    "                                <button id=\"down\" type=\"button\" class=\"btn btn-info btn-sm downPara\">Down</button>\n" +
+                    "                                <button id=\"addParasub\" type=\"button\" class=\"btn btn-primary btn-sm addParasub\">Add Subpara</button>\n" +
+                    "                            </span>\n" +
+                    "\n" +subparahtml + "\n" +
+                                          "</li>";
+                                          parameterhtmltmp=parameterhtmltmp.replace("<option>"+paraname+"</option>","<option selected = \"selected\">"+paraname+"</option>");
+                                          parameterhtmltmp=parameterhtmltmp.replace("<option>"+paracondition+"</option>","<option selected = \"selected\">"+paracondition+"</option>");
+                                          parameterhtmltmp=parameterhtmltmp.replace("<option>"+retrurn_methor+"</option>","<option selected = \"selected\">"+retrurn_methor+"</option>");
+                                          parameterhtml = parameterhtml + parameterhtmltmp;
+                                      });
+                                      rulehtml = rulehtml + "<ul>\n" +
+                    "                        <label class=\"con\" contenteditable=\"true\" placeholder=\"Enter rule title here...\" style=\"font-size:24px;\">"+ title +"</label>\n" +
+                    "                        <button type=\"button\" class=\"btn btn-primary addSub\">Add Subrule</button>\n" +
+                    "                        <button type=\"button\" class=\"btn btn-danger delSub\">Delete</button>\n" +
+                    "                        <button type=\"button\" class=\"btn btn-success upSub\">Up</button>\n" +
+                    "                        <button type=\"button\" class=\"btn btn-info downSub\">Down</button>\n" + parameterhtml +
+                    "                    </ul>";
+
+
+                                  });
+                                  $('.parameter').append(rulehtml);
+                              }
+                          });
+
+
+                      } // end success
+                    });  //end ajax1
+                }   //end if
+            });  //end
+        });
+    </script>
+{% endblock %}

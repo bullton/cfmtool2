@@ -1,0 +1,53 @@
+{% extends 'rulebase.html' %}
+
+{% block rule_show %}/parameters/ref/{% endblock %}
+
+{% block rule_post %}/newrule/{% endblock %}
+
+{% block rule_btn %}Save{% endblock %}
+
+{% block rule_btn_import %}Import{% endblock %}
+
+{% block rule_import %}Import{% endblock %}
+
+{% block import_rule %}
+    <div class="row">
+        <div class="col-md-6" id="importrule">
+            <div class="form-group">
+                <label>Import from file:</label>
+                <form action="/newrule/import" enctype='multipart/form-data' method='POST'>
+                    <input id="input-b1" name="input-b1" type="file" class="file">
+                </form>
+            </div>
+        </div>
+        <div class="col-md-6">
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block parameter %}
+    <div class="col-md-10 parameters" id="parameters">
+        {% if importpara %}
+            <ul class="paras">
+                {% for key in importpara %}
+                    <li>
+                        <label class="con con1" contenteditable="true" placeholder="Enter parameter name here..." style="font-size:24px;">{{ key }}</label>
+                        <input type="text" placeholder="Enter Keywords here" style="width: 400px" value="{{ importpara[key] }}">
+                        <button type="button" class="btn btn-primary addPara">Add</button>
+                        <button type="button" class="btn btn-danger delPara">Delete</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <ul class="paras">
+                <li>
+                    <label class="con con1" contenteditable="true" placeholder="Enter parameter name here..." style="font-size:24px;"></label>
+                    <input type="text" placeholder="Enter Keywords here" style="width: 400px">
+                    <button type="button" class="btn btn-primary addPara">Add</button>
+                    <button type="button" class="btn btn-danger delPara">Delete</button>
+                </li>
+            </ul>
+        {% endif %}
+    </div><!--/middle-->
+{% endblock %}

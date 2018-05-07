@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*
 
-from flask import Flask,render_template,url_for,request,redirect,session,flash, send_file, send_from_directory
+from flask import Flask,render_template,url_for,request,redirect,session,flash, send_file, send_from_directory,jsonify
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash,check_password_hash
 import config
-from models import User, Source, Rule, Static_Data
+from models import User, Source, Rule, Static_Data, Parameters
 from static import Static
 from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform, re, xlrd, time, random
+import os, datetime, platform, re, xlrd, time, random, json
 import pandas as pd
 from pandas import Series,DataFrame
 import numpy as np
@@ -229,9 +229,53 @@ def uploadfile(uf, returnpage):
         return redirect(url_for(returnpage))
 
 
-rulekey = ('customer_feature_white','customer_feature_black','customer_top_fault','customer_care_function','uuf_filter','uuf_exclusion','kpi_filter','kpi_exclusion','ca_filter','ca_exclusion','oamstab_filter','oamstab_exclusion','pet_filter','pet_exclusion','func_filter','func_exclusion','category_search_field','category_tag','customer_rru','customer_bbu','customer_keyword_white','customer_keyword_black','customer_pronto_white','customer_pronto_black','r4bbu','r3bbu','ftcomsc')
-rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),('customer_top_fault','customer_top_fault'),('customer_bbu','customer_bbu'),('customer_keyword_white','customer_keyword_white'),('category_tag','category_tag'),('uuf_filter','uuf_filter'),('kpi_filter','kpi_filter'),('ca_filter','ca_filter'),('oamstab_filter','oamstab_filter'),('pet_filter','pet_filter'),('func_filter','func_filter'),('customer_pronto_white','customer_pronto_white'),('r4bbu','r4bbu')])
-rulekey2 = OrderedDict([('customer_feature_black','customer_feature_black'),('customer_care_function','customer_care_function'),('customer_rru','customer_rru'),('customer_keyword_black','customer_keyword_black'),('category_search_field','category_search_field'),('uuf_exclusion','uuf_exclusion'),('kpi_exclusion','kpi_exclusion'),('ca_exclusion','ca_exclusion'),('oamstab_exclusion','oamstab_exclusion'),('pet_exclusion','pet_exclusion'),('func_exclusion','func_exclusion'),('customer_pronto_black','customer_pronto_black'),('r3bbu','r3bbu'),('ftcomsc','ftcomsc')])
+rulekey = ('customer_feature_white',
+           'customer_feature_black',
+           'customer_top_fault',
+           'customer_care_function',
+           'self_define_category',
+           'customer_rru',
+           'customer_bbu',
+           'customer_keyword_white',
+           'customer_keyword_black',
+           'customer_pronto_white',
+           'customer_pronto_black',
+           'r4bbu',
+           'r3bbu',
+           'ftcomsc')
+
+constant_category = ('UUF',
+                     'KPI',
+                     'OAMstability',
+                     'PETstability',
+                     'function')
+
+rulekey1 = OrderedDict([('customer_feature_white','customer_feature_white'),
+                        ('customer_top_fault','customer_top_fault'),
+                        ('customer_bbu','customer_bbu'),
+                        ('customer_keyword_white','customer_keyword_white'),
+                        ('category_tag','category_tag'),
+                        ('uuf_filter','uuf_filter'),
+                        ('kpi_filter','kpi_filter'),
+                        ('oamstab_filter','oamstab_filter'),
+                        ('pet_filter','pet_filter'),
+                        ('func_filter','func_filter'),
+                        ('customer_pronto_white','customer_pronto_white'),
+                        ('r3bbu','r3bbu'),
+                        ('r4bbu','r4bbu')])
+rulekey2 = OrderedDict([('customer_feature_black','customer_feature_black'),
+                        ('customer_care_function','customer_care_function'),
+                        ('customer_rru','customer_rru'),
+                        ('customer_keyword_black','customer_keyword_black'),
+                        ('category_search_field','category_search_field'),
+                        ('uuf_exclusion','uuf_exclusion'),
+                        ('kpi_exclusion','kpi_exclusion'),
+                        ('ca_exclusion','ca_exclusion'),
+                        ('oamstab_exclusion','oamstab_exclusion'),
+                        ('pet_exclusion','pet_exclusion'),
+                        ('func_exclusion','func_exclusion'),
+                        ('customer_pronto_black','customer_pronto_black'),
+                        ('ftcomsc','ftcomsc')])
 
 rulekeydic = {
     'customer_feature_white': 'ArrOptusCaredFeatureList',
@@ -445,6 +489,100 @@ def newrule():
             return redirect(url_for('newrule'))
 
 
+@app.route('/parameters/',methods=['GET','POST'])
+@login_require
+def parameters():
+    user_id = session.get('user_id')
+    if request.method == 'GET':
+        userparalist = Parameters.query.order_by(desc(Parameters.id)).all()
+        return render_template('parameters.html', userparas=userparalist)
+    else:
+        paras = request.form.get('postdata')
+        name = request.form.get('name')
+        release = request.form.get('release')
+        customer = request.form.get('customer')
+        para = Parameters.query.filter(Parameters.name == name).first()
+        if para:
+            return jsonify({"message":"Parameter is already exist, please try another name!"})
+        else:
+            para = Parameters(name=name, customer=customer, release=release,
+                        parameters=paras)
+            user = User.query.filter(User.id == user_id).first()
+            para.owner = user
+            db.session.add(para)
+            db.session.commit()
+            return jsonify({"message": "Parameters is already sucessfully added!"})
+
+
+@app.route('/querypara/',methods=['GET','POST'])
+@login_require
+def querypara():
+    user_id = session.get('user_id')
+    pid = request.form.get('pid')
+    para = Parameters.query.filter(Parameters.id == pid).first()
+    return jsonify({"name": para.name,
+                    "release": para.release,
+                    "customer": para.customer,
+                    "parameter": para.parameters
+                    })
+
+@app.route('/parameters/ref/',methods=['GET','POST'])
+@login_require
+def pararef():
+    user_id = session.get('user_id')
+    userparalist = Parameters.query.order_by(desc(Parameters.id)).all()
+    pid = request.form.get('pid')
+    para = Parameters.query.filter(Parameters.id == pid).first()
+    return jsonify({"name":para.name,
+                    "release":para.release,
+                    "customer":para.customer,
+                    "parameter":para.parameters
+                    })
+
+@app.route('/rules/',methods=['GET','POST'])
+@login_require
+def rules():
+    user_id = session.get('user_id')
+    if request.method == 'GET':
+        userparalist = Parameters.query.order_by(desc(Parameters.id)).all()
+        userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+        return render_template('rule.html', userparameters=userparalist, userrules=userrulelist)
+    else:
+        rules = request.form.get('postdata')
+        name = request.form.get('name')
+        release = request.form.get('release')
+        customer = request.form.get('customer')
+        parameter = request.form.get('parameter')
+        rule = Parameters.query.filter(Rule.rulename == name).first()
+        if rule:
+            return jsonify({"message":"Rule is already exist, please try another name!"})
+        else:
+            rule = Rule(rulename=name, customer=customer, release=release,
+                        rules=rules)
+            user = User.query.filter(User.id == user_id).first()
+            para = Parameters.query.filter(Parameters.id == parameter).first()
+            rule.owner = user
+            rule.useparameter = para
+            db.session.add(rule)
+            db.session.commit()
+            return jsonify({"message": "Rule is already sucessfully added!"})
+
+
+@app.route('/rules/ref/',methods=['GET','POST'])
+@login_require
+def ruleref():
+    user_id = session.get('user_id')
+    userparalist = Parameters.query.order_by(desc(Parameters.id)).all()
+    ruleid = request.form.get('ruleid')
+    rule = Rule.query.filter(Rule.id == ruleid).first()
+    return jsonify({"name":rule.rulename,
+                    "release":rule.release,
+                    "customer":rule.customer,
+                    "rule":rule.rules,
+                    "paraid":rule.parameter_id
+                    })
+
+
 @app.route('/editrule/',methods=['GET','POST'])
 @login_require
 def editrule():
@@ -605,31 +743,12 @@ def newimport():
     flash(savepath)
     data = pd.read_excel(savepath, dtype='str')
     data[data == 'nan'] = np.nan
-    key1 = OrderedDict()
-    key2 = OrderedDict()
-    for k in rulekey1.keys():
-        if rulekeydic.has_key(k):
-            try:
-                key1[k] = ','.join(data[rulekeydic[k]].dropna())
-            except KeyError:
-                key1[k] = ','.join(data[k].dropna())
-            else:
-                pass
-        else:
-            key1[k] = ''
-    for k in rulekey2.keys():
-        if rulekeydic.has_key(k):
-            try:
-                key2[k] = ','.join(data[rulekeydic[k]].dropna())
-            except KeyError:
-                key2[k] = ','.join(data[k].dropna())
-            else:
-                pass
-        else:
-            key2[k] = ''
-    #return redirect(url_for('newrule'))
-    return render_template('newrule.html', key1=key1, key2=key2)
-    # return render_template('newrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
+    parameters = {}
+    for col in data.columns:
+        parameters[col] = ','.join(data[col].dropna())
+    print parameters
+    #return jsonify(parameters)
+    return render_template('parameters.html', importpara = parameters)
 
 
 @app.route('/delrule/',methods=['GET','POST'])
@@ -750,4 +869,4 @@ def my_context_processor():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=8080)
+    app.run(host='127.0.0.1',port=8080)
