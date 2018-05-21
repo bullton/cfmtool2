@@ -10,7 +10,8 @@ from exts import db
 from decorators import login_require
 from sqlalchemy import desc
 from collections import OrderedDict
-import os, datetime, platform, re, xlrd, time, random, json
+from io import BytesIO
+import os, datetime, platform, re, xlrd, time, random, json, zipfile
 import pandas as pd
 from pandas import Series,DataFrame
 import numpy as np
@@ -26,7 +27,7 @@ app.config.from_object(config)
 UPLOAD_FOLDER='uploadfolder'
 EXPORT_FOLDER='export'
 FIGURE_FOLDER='static/figure'
-ALLOWED_EXTENSIONS = set(['xls', 'xlsx'])
+ALLOWED_EXTENSIONS = set(['xls', 'xlsx', 'json'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['EXPORT_FOLDER'] = EXPORT_FOLDER
 app.config['FIGURE_FOLDER'] = FIGURE_FOLDER
@@ -554,15 +555,35 @@ def rules():
         userparalist = Parameters.query.order_by(desc(Parameters.id)).all()
         userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
         return render_template('rule.html', userparameters=userparalist, userrules=userrulelist)
+
     else:
-        rules = request.form.get('postdata')
+
+        try:
+            request.files['input-b1']
+        except:
+            rules = request.form.get('postdata')
+        else:
+            uf = request.files['input-b1']
+            savepath, new_filename = uploadfile(uf, 'rules')
+            if uf.filename.rsplit('.', 1)[1] in ['xls', 'xlsx']:
+                pass
+            else:
+                with open(savepath, 'r') as f:
+                    rules = f.read()
+
         name = request.form.get('name')
         release = request.form.get('release')
         customer = request.form.get('customer')
-        parameter = request.form.get('parameter')
+        parameter = request.form.get('paraid')
         rule = Rule.query.filter(Rule.rulename == name).first()
         if rule:
-            return jsonify({"message":"Rule is already exist, please try another name!"})
+            try:
+                request.files['input-b1']
+            except:
+                return jsonify({"message": "Rule is already exist, please try another name!"})
+            else:
+                flash('Rule is already exist, please try another rule name!', 'danger')
+                return redirect(url_for('rules'))
         else:
             rule = Rule(rulename=name, customer=customer, release=release,
                         rules=rules)
@@ -572,7 +593,13 @@ def rules():
             rule.useparameter = para
             db.session.add(rule)
             db.session.commit()
-            return jsonify({"message": "Rule is already sucessfully added!"})
+            try:
+                request.files['input-b1']
+            except:
+                return jsonify({"message": "Rule is already sucessfully added!"})
+            else:
+                flash('Rule is already sucessfully added!', 'success')
+                return redirect(url_for('rules'))
 
 
 @app.route('/rules/ref/',methods=['GET','POST'])
@@ -604,11 +631,9 @@ def editrule():
         name = request.form.get('name')
         release = request.form.get('release')
         customer = request.form.get('customer')
-        parameter = request.form.get('parameter')
+        parameter = request.form.get('paraid')
         rule = Rule.query.filter(Rule.rulename == name).first()
-        print 'begin to update'
         if rule:
-            print 'exist'
             rule.customer = customer
             rule.release = release
             rule.rules = rules
@@ -645,13 +670,34 @@ def exportrule():
     parametertoexport = parameter.parameters
     export_path = os.path.join(basedir, app.config['EXPORT_FOLDER'])
     unix_time = int(time.time())
-    filename = str(unix_time) + '.json'
-    fullpath = os.path.join(export_path,filename)
-    with open(fullpath, "a") as f:
-        json.dump(ruletoexport, f)
-        json.dump(parametertoexport, f)
-    return send_from_directory(export_path, filename, as_attachment=True)
+    parafilename = 'para'+str(unix_time) + '.json'
+    rulefilename = 'rule'+str(unix_time) + '.json'
+    parafullpath = os.path.join(export_path,parafilename)
+    rulefullpath = os.path.join(export_path,rulefilename)
+    with open(parafullpath, "w") as f:
+        f.write(parametertoexport)
 
+    with open(rulefullpath, "w") as f:
+        f.write(ruletoexport)
+    return jsonify({"timestamp": str(unix_time)})
+
+
+@app.route("/download/<ts>", methods=['GET'])
+@login_require
+def download(ts):
+    download_path = os.path.join(basedir, app.config['EXPORT_FOLDER'])
+    memory_file = BytesIO()
+    file_list = []
+    file_list.append('para'+ts+'.json')
+    file_list.append('rule'+ts+'.json')
+    filename = ts+'.zip'
+    with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as zf:
+        for _file in file_list:
+            with open(os.path.join(download_path, _file), 'rb') as fp:
+                zf.writestr(_file, fp.read())
+    memory_file.seek(0)
+
+    return send_file(memory_file, attachment_filename=filename, as_attachment=True)
 
 @app.route('/newrule/ref/',methods=['GET','POST'])
 @login_require
@@ -669,20 +715,25 @@ def newref():
     return render_template('newrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=ruleid,rule=rule)
 
 
-@app.route('/newrule/import/',methods=['POST'], strict_slashes=False)
+@app.route('/newparameter/import/',methods=['POST'], strict_slashes=False)
 @login_require
-def newimport():
+def newparaimport():
     uf = request.files['input-b1']
-    savepath, new_filename = uploadfile(uf, 'newrule')
+    savepath, new_filename = uploadfile(uf, 'parameters')
     flash(savepath)
-    data = pd.read_excel(savepath, dtype='str')
-    data[data == 'nan'] = np.nan
-    parameters = {}
-    for col in data.columns:
-        parameters[col] = ','.join(data[col].dropna())
-    #print parameters
-    #return jsonify(parameters)
-    return render_template('parameters.html', importpara = parameters)
+    if uf.filename.rsplit('.', 1)[1] in ['xls','xlsx']:
+        data = pd.read_excel(savepath, dtype='str')
+        data[data == 'nan'] = np.nan
+        parameters = {}
+        for col in data.columns:
+            parameters[col] = ','.join(data[col].dropna())
+        #print parameters
+        #return jsonify(parameters)
+
+    else:
+        with open(savepath, 'r') as f:
+            parameters = eval(f.read())
+    return render_template('parameters.html', importpara=parameters)
 
 
 @app.route('/delrule/',methods=['GET','POST'])

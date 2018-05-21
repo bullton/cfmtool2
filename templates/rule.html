@@ -26,19 +26,19 @@
     <div class="container-fluid">
         <div class="row">
             <!--left-->
-            <form name="form1" action="" method="POST">
+            <form name="form1" action="/rules/" enctype='multipart/form-data' method="POST">
                 <div class="col-md-2" id="leftCol">
                     <div class="form-group">
                         <label>Rule Name:</label>
-                        <input type="text" class="form-control name" placeholder="rule name" name="rulename" >
+                        <input type="text" class="form-control name" placeholder="rule name" name="name" id="name" >
                     </div>
                     <div class="form-group">
                         <label>Release:</label>
-                        <input type="text" class="form-control release" placeholder="release" name="release" >
+                        <input type="text" class="form-control release" placeholder="release" name="release" id="release">
                     </div>
                     <div class="form-group">
                         <label>Customer:</label>
-                        <input type="text" class="form-control customer" placeholder="customer" name="customer" >
+                        <input type="text" class="form-control customer" placeholder="customer" name="customer" id="customer">
                     </div>
                     <div class="form-group">
                         <hr>
@@ -66,6 +66,7 @@
                     <div class="form-group buttonpost">
                         <button class="btn btn-primary btn-block save" name="saverule" id="saverule"  type="button">Save</button>
                         <button class="btn btn-primary btn-block export" name="export" id="export"  type="button">Export</button>
+                        <input id="input-b1" name="input-b1" type="file" class="file">
                     </div>
                 </div><!--/left-->
                 <!--right-->
@@ -645,8 +646,9 @@
                     "name":name,
                     "release":release,
                     "customer":customer,
-                    "parameter": $("select[name='paraid']").find("option:selected").val()
+                    "paraid": $("select[name='paraid']").find("option:selected").val()
                 };
+
                 if (name != $.session.get('rulename'))
                 {
                     $.ajax({
@@ -685,7 +687,9 @@
                   data:postdata,
                   dataType: 'json',
                   success: function (data) {
-                      alert(data["message"])
+                      var ts = data['timestamp'];
+                      var href = "/download/"+ts;
+                      $('.buttonpost').append("<a href="+href+">Click to download</a>");
                   }
                 });
             });
