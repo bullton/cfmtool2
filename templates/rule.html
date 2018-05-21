@@ -65,6 +65,7 @@
                     </div>
                     <div class="form-group buttonpost">
                         <button class="btn btn-primary btn-block save" name="saverule" id="saverule"  type="button">Save</button>
+                        <button class="btn btn-primary btn-block export" name="export" id="export"  type="button">Export</button>
                     </div>
                 </div><!--/left-->
                 <!--right-->
@@ -672,7 +673,22 @@
                 }
 
             });
+            $(".buttonpost").on("click",".export",function(){
+                var postdata = {
+                    "parameter": $("select[name='paraid']").find("option:selected").val(),
+                    "rule": $("select[name='ruleid']").find("option:selected").val()
+                };
 
+                $.ajax({
+                  type: "post",
+                  url: '/exportrule/',
+                  data:postdata,
+                  dataType: 'json',
+                  success: function (data) {
+                      alert(data["message"])
+                  }
+                });
+            });
 
             $(".selectrule").change(function(){
                 var ruleid = $("select[name='ruleid']").find("option:selected").val();

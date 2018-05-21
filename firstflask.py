@@ -637,26 +637,19 @@ def showedit():
 @app.route('/exportrule/',methods=['POST'])
 @login_require
 def exportrule():
-    user_id = session.get('user_id')
-    ruleid = request.form.get('ruleid2')
+    parameter_id = request.form.get('parameter')
+    ruleid = request.form.get('rule')
     rule = Rule.query.filter(Rule.id == ruleid).first()
-    df = pd.DataFrame()
-    #print 'rule',vars(rule)
-    #print rulekeydic2
-    for col in rulekey:
-        #print 'col=',col
-        value = vars(rule)[col].split(',')
-        #print 'value',value
-        #df[col] = value
-        s = pd.Series(value)
-        #print s
-        df = pd.concat([df, pd.DataFrame({col: s})], axis=1)
+    parameter = Parameters.query.filter(Parameters.id == parameter_id).first()
+    ruletoexport = rule.rules
+    parametertoexport = parameter.parameters
     export_path = os.path.join(basedir, app.config['EXPORT_FOLDER'])
     unix_time = int(time.time())
-    filename = str(unix_time) + '.xls'
+    filename = str(unix_time) + '.json'
     fullpath = os.path.join(export_path,filename)
-    #print df
-    df.to_excel(fullpath)
+    with open(fullpath, "a") as f:
+        json.dump(ruletoexport, f)
+        json.dump(parametertoexport, f)
     return send_from_directory(export_path, filename, as_attachment=True)
 
 
