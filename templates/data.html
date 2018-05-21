@@ -25,6 +25,7 @@
                         <tr>
                             <th scope="row">{{ index }}</th>
                             {% for col_name in stat.columns %}
+
                                 {% if col_name == 'PR_ID' %}
                                     <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-lg">{{ row[col_name] }}</button></td>
                                 {% else %}

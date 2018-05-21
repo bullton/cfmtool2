@@ -315,6 +315,7 @@ def index():
     return render_template('index.html', sources = sourcefilelist, userrules=userrulelist)
 
 
+# to filter and mark the source data
 @app.route('/data/',methods=['GET','POST'])
 @login_require
 def data():
@@ -325,14 +326,20 @@ def data():
         source_path = request.form.get('selectsource')
         select_rule = request.form.get('selectrule')
         data = pd.read_excel(source_path)
+
+        # to skip the unused row:
         if 'Unnamed' in ','.join(data.columns):
             data = pd.read_excel(source_path, skiprows = range(0, 6))
+
         # titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
         stat = pd.DataFrame()
         rule = Rule.query.filter(Rule.id == select_rule).first()
-        static = Static(data, rule)
+        parameter = Parameters.query.filter(Parameters.id == rule.parameter_id).first()
+        static = Static(data, rule, parameter)
         stat = static.static()
         stat_orderdict = stat.to_dict(into=OrderedDict)
+
+        # write proceeding data to db
         static_data = Static_Data(data=str(stat_orderdict))
         user = User.query.filter(User.id == user_id).first()
         static_data.owner = user
@@ -553,7 +560,7 @@ def rules():
         release = request.form.get('release')
         customer = request.form.get('customer')
         parameter = request.form.get('parameter')
-        rule = Parameters.query.filter(Rule.rulename == name).first()
+        rule = Rule.query.filter(Rule.rulename == name).first()
         if rule:
             return jsonify({"message":"Rule is already exist, please try another name!"})
         else:
@@ -583,98 +590,32 @@ def ruleref():
                     })
 
 
-@app.route('/editrule/',methods=['GET','POST'])
+@app.route('/rules/update/',methods=['GET','POST'])
 @login_require
 def editrule():
     user_id = session.get('user_id')
-    rule = {'rulename':'rulename','release':'release','customer':'customer'}
     userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
     if request.method == 'GET':
-        return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
+        print 'get'
+        pass
     else:
-        rulename = request.form.get('rulename')
-        customer = request.form.get('customer')
+        print 'post'
+        rules = request.form.get('postdata')
+        name = request.form.get('name')
         release = request.form.get('release')
-        customer_feature_white = request.form.get('customer_feature_white')
-        customer_feature_black = request.form.get('customer_feature_black')
-        customer_top_fault = request.form.get('customer_top_fault')
-        customer_care_function = request.form.get('customer_care_function')
-        customer_bbu = request.form.get('customer_bbu')
-        customer_rru = request.form.get('customer_rru')
-        customer_keyword_white = request.form.get('customer_keyword_white')
-        customer_keyword_black = request.form.get('customer_keyword_black')
-        category_tag = request.form.get('category_tag')
-        category_search_field = request.form.get('category_search_field')
-        uuf_filter = request.form.get('uuf_filter').decode("utf-8")
-        uuf_exclusion = request.form.get('uuf_exclusion')
-        kpi_filter = request.form.get('kpi_filter')
-        kpi_exclusion = request.form.get('kpi_exclusion')
-        ca_filter = request.form.get('ca_filter')
-        ca_exclusion = request.form.get('ca_exclusion')
-        oamstab_filter = request.form.get('oamstab_filter')
-        oamstab_exclusion = request.form.get('oamstab_exclusion')
-        pet_filter = request.form.get('pet_filter')
-        pet_exclusion = request.form.get('pet_exclusion')
-        func_filter = request.form.get('func_filter')
-        func_exclusion = request.form.get('func_exclusion')
-        customer_pronto_white = request.form.get('customer_pronto_white')
-        customer_pronto_black = request.form.get('customer_pronto_black')
-        r4bbu = request.form.get('r4bbu')
-        r3bbu = request.form.get('r3bbu')
-        ftcomsc = request.form.get('func_exclusion')
-        id = request.form.get('ruleid')
-
-        rule = Rule.query.filter(Rule.id == id).first()
+        customer = request.form.get('customer')
+        parameter = request.form.get('parameter')
+        rule = Rule.query.filter(Rule.rulename == name).first()
+        print 'begin to update'
         if rule:
-            checkrulename = Rule.query.filter(Rule.rulename == rulename).first()
-            if checkrulename and checkrulename.id != int(id):
-                flash('Rule name could not be duplicated!', 'danger')
-                return redirect(url_for('editrule'))
-            else:
-                rule.rulename = rulename
-                rule.release = release
-                rule.customer = customer
-                rule.customer_feature_white = customer_feature_white
-                rule.customer_feature_black = customer_feature_black
-                rule.customer_top_fault = customer_top_fault
-                rule.customer_care_function = customer_care_function
-                rule.uuf_filter = uuf_filter
-                rule.uuf_exclusion = uuf_exclusion
-                rule.kpi_filter = kpi_filter
-                rule.kpi_exclusion = kpi_exclusion
-                rule.ca_filter = ca_filter
-                rule.ca_exclusion = ca_exclusion
-                rule.oamstab_filter = oamstab_filter
-                rule.oamstab_exclusion = oamstab_exclusion
-                rule.pet_filter = pet_filter
-                rule.pet_exclusion = pet_exclusion
-                rule.func_filter = func_filter
-                rule.func_exclusion = func_exclusion
-                rule.category_search_field = category_search_field
-                rule.category_tag = category_tag
-                rule.customer_rru = customer_rru
-                rule.customer_bbu = customer_bbu
-                rule.customer_keyword_white = customer_keyword_white
-                rule.customer_keyword_black = customer_keyword_black
-                rule.customer_pronto_white = customer_pronto_white
-                rule.customer_pronto_black = customer_pronto_black
-                rule.r4bbu = r4bbu
-                rule.r3bbu = r3bbu
-                rule.ftcomsc = ftcomsc
-                db.session.commit()
-                rule = Rule.query.filter(Rule.id == id).first()
-                key1 = OrderedDict()
-                key2 = OrderedDict()
-                for k in rulekey1.keys():
-                    key1[k] = vars(rule)[k]
-                for k in rulekey2.keys():
-                    key2[k] = vars(rule)[k]
-                # return redirect(url_for('editrule'))
-                flash('Rule is already sucessfully edited!', 'success')
-                return render_template('editrule.html',key1 = key1, key2 = key2, userrules = userrulelist, ruleid=id, rule=rule)
-        else:
-            flash('A Null rule cannot be edited' , 'danger')
-            return render_template('editrule.html', key1 = rulekey1, key2 = rulekey2, userrules = userrulelist)
+            print 'exist'
+            rule.customer = customer
+            rule.release = release
+            rule.rules = rules
+            para = Parameters.query.filter(Parameters.id == parameter).first()
+            rule.useparameter = para
+            db.session.commit()
+            return jsonify({"message": "Rule is already sucessfully updated!"})
 
 
 @app.route('/editrule/showedit/',methods=['GET','POST'])
@@ -714,7 +655,7 @@ def exportrule():
     unix_time = int(time.time())
     filename = str(unix_time) + '.xls'
     fullpath = os.path.join(export_path,filename)
-    print df
+    #print df
     df.to_excel(fullpath)
     return send_from_directory(export_path, filename, as_attachment=True)
 
@@ -746,7 +687,7 @@ def newimport():
     parameters = {}
     for col in data.columns:
         parameters[col] = ','.join(data[col].dropna())
-    print parameters
+    #print parameters
     #return jsonify(parameters)
     return render_template('parameters.html', importpara = parameters)
 

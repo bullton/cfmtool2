@@ -8,24 +8,27 @@
 """
 import pandas as pd
 import numpy as np
-import datetime, time
+import datetime, time, json
 
 class Static:
-    def __init__(self, source, rule):
+    def __init__(self, source, rule, parameter):
         self.source = source
         self.rule = rule
-        titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
+        self.parameter = parameter
+        titles = ['PR_ID','Opendays','ReportCW','CloseCW','Duplicated','AttachPR','Severity','Top','Release','Comments']
+        for eachrule in json.loads(self.rule.rules)['rule']:
+            titles.append(eachrule['title'])
         self.result=pd.DataFrame(columns=titles)
 
     def get_pr_id(self):
         return self.source['Problem ID']
 
-    def search(self, areas, which_rule):
+    def search(self, source, areas, which_rule): # source = dataframe
         result = False
         result_list = []
-        if which_rule:
+        if isinstance(which_rule, unicode):
             keywords = which_rule.split(',')
-            for index, row in self.source.iterrows():
+            for index, row in source.iterrows():
                 for area in areas:
                     for kw in keywords:
                         row_area = row[area]
@@ -40,9 +43,147 @@ class Static:
                         break
                 result_list.append(result)
                 result = False
+        elif isinstance(which_rule, pd.core.series.Series):
+            for index, value in which_rule.iteritems():
+                if value is not np.nan:
+                    keywords = value.split(',')
+                    for area in areas:
+                        for kw in keywords:
+                            source_area = source[area]
+                            if type(source_area) == float or type(source_area) == int:
+                                source_area = str(source_area)
+                            else:
+                                pass
+                            if kw in source_area:
+                                result = True
+                                break
+                        if result:
+                            break
+                    result_list.append(result)
+                    result = False
+
         else:
-            result_list = [False] * self.source.iloc[:,0].size
+            result_list = [False] * source.iloc[:,0].size
         return result_list
+
+
+    def caculate_subpara(self, source, parameter, preresult, subpara, resultindex):
+        subparaname = subpara['subparaname']
+        expression = subpara['expression']
+        parasubvalue = subpara['parasubvalue']
+        if expression == '=':
+            if json.loads(parameter.parameters).has_key(subpara['paraname']):
+                if parasubvalue == json.loads(parameter.parameters)[subpara['paraname']]:
+                    return True
+                else:
+                    return False
+            else:
+                if parasubvalue == preresult[subpara['paraname']][resultindex]:
+                    return True
+                else:
+                    return False
+        elif expression == '!=':
+            if json.loads(parameter.parameters).has_key(subpara['paraname']):
+                if parasubvalue != json.loads(parameter.parameters)[subpara['paraname']]:
+                    return True
+                else:
+                    return False
+            else:
+                if parasubvalue != preresult[subpara['paraname']][resultindex]:
+                    return True
+                else:
+                    return False
+        elif expression == '>':
+            if json.loads(parameter.parameters).has_key(subpara['paraname']):
+                if parasubvalue > json.loads(parameter.parameters)[subpara['paraname']]:
+                    return True
+                else:
+                    return False
+            else:
+                if parasubvalue > preresult[subpara['paraname']][resultindex]:
+                    return True
+                else:
+                    return False
+        elif expression == 'include':
+            if json.loads(parameter.parameters).has_key(subpara['paraname']):
+                if parasubvalue in json.loads(parameter.parameters)[subpara['paraname']]:
+                    return True
+                else:
+                    return False
+            else:
+                if parasubvalue in preresult[subpara['paraname']][resultindex]:
+                    return True
+                else:
+                    return False
+        elif expression == 'exclude':
+            if json.loads(parameter.parameters).has_key(subpara['paraname']):
+                if parasubvalue in json.loads(parameter.parameters)[subpara['paraname']]:
+                    return False
+                else:
+                    return True
+            else:
+                if parasubvalue in preresult[subpara['paraname']][resultindex]:
+                    return False
+                else:
+                    return True
+        else:
+            return
+
+
+    def execute_rule(self, rule, parameter, preresult): # rule is each subrule, parameter is parameter from db
+        resulttype = [[] for i in range(self.source.iloc[:,0].size)]
+        for eachpara in rule['parameters']:
+            result=[]
+            if eachpara['condition']=='IN':
+                if json.loads(parameter.parameters).has_key(eachpara['paraname']):
+                    para = json.loads(parameter.parameters)[eachpara['paraname']]  # should add result here as para
+                    result = self.search(self.source, eachpara['seachfield'], para)
+                else:
+                    para = preresult[eachpara['paraname']]
+                    result = self.search(json.loads(parameter.parameters), eachpara['seachfield'], para)
+
+
+                if eachpara['subparameter']:
+                    for subpara in eachpara['subparameter']:
+                        for i in range(len(result)):
+                            if result[i]:
+
+                                if subpara['subcondition'] == 'AND NOT':
+                                    if self.caculate_subpara(self.source, parameter, preresult, subpara, i):
+                                        result[i] = False
+                                    else:
+                                        pass
+                                elif subpara['subcondition'] == 'AND':
+                                    if self.caculate_subpara(self.source, parameter, preresult, subpara, i):
+                                        pass
+                                    else:
+                                        result[i] = False
+                                else:
+                                    pass
+
+                if eachpara['return'] == 'Self Define':
+                    for i in range(len(result)):
+                        if result[i] and eachpara['break'] == 'NA':
+                            resulttype[i].append(eachpara['return value'])
+                        elif result[i] and eachpara['break'] == 'Break' and resulttype[i]==[]:
+                            resulttype[i].append(eachpara['return value'])
+                        else:
+                            pass
+                elif eachpara['return'] == 'As Parameter':
+                    if (len(para)==1):
+                        for i in range(len(result)):
+                            if result[i]:
+                                resulttype[i].append(para)
+                    else:
+                        return self.get_mass_kw(eachpara['seachfield'],para.split(','))
+                elif eachpara['return'] == 'True':
+                    pass
+                else:
+                    pass
+
+        for index, value in enumerate(resulttype):
+            resulttype[index] = ','.join(value)
+        return resulttype
 
     def is_customer_pr(self):
         result = pd.DataFrame()
@@ -103,12 +244,12 @@ class Static:
             bbutypelist[:]=[]
         return bbutype
 
-    def get_rru(self):
+    def get_mass_kw(self, fields, keywords):
         rrutype = []
         for i in range(len(self.source)):
             rrutype.append([])
-        for rru in self.rule.customer_rru.split(','):
-            rruresult = self.search(['Test Subphase','Title','Description'],rru)
+        for rru in keywords:
+            rruresult = self.search(self.source, fields,rru)
             for i in range(len(rruresult)):
                 if rruresult[i]:
                     rrutype[i].append(rru)
@@ -117,14 +258,13 @@ class Static:
                 rrutype[i] = ','.join(rrutype[i])
             else:
                 rrutype[i] = np.nan
-        return rrutype
+        return rrutype   # array
 
     def get_category(self):
         df = pd.DataFrame()
         cate_list=[]
         category_tag = self.rule.category_tag.split(',')
         for category in category_tag:
-            print category
             if category == 'UUF':
                 df[category] = self.search(['Title','Description'],self.rule.uuf_filter)
             elif category == 'KPI':
@@ -190,7 +330,7 @@ class Static:
         return rpcw_list,clcw_list,open_list
 
     def is_top(self):
-        return self.search(['Top Importance','Title'],'TOP,Top,top')
+        return self.search(self.source, ['Top Importance','Title'],'TOP,Top,top')
 
     def get_release_severity(self):
         release_list = []
@@ -282,13 +422,11 @@ class Static:
 
     def static(self):
         self.result['PR_ID'] = self.get_pr_id()
-        self.result['CustomerImpact'], self.result['Comments'] = self.is_customer_pr()
-        self.result['BBU'] = self.get_bbu()
-        self.result['RRU'] = self.get_rru()
-        self.result['Category'] = self.get_category()
         self.result['ReportCW'],self.result['CloseCW'],self.result['Opendays'] = self.get_cw()
         self.result['Top'] = self.is_top()
         self.result['Release'],self.result['Severity'] = self.get_release_severity()
         self.result['Duplicated'],self.result['AttachPR'] = self.duplicated()
-        self.result['CrossCount'],self.result['TestState'] = self.crosscount_teststat()
+        #self.result['CrossCount'],self.result['TestState'] = self.crosscount_teststat()
+        for eachrule in json.loads(self.rule.rules)['rule']:
+            self.result[eachrule['title']] = self.execute_rule(eachrule, self.parameter, self.result)
         return self.result
