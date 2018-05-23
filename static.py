@@ -72,57 +72,68 @@ class Static:
         expression = subpara['expression']
         parasubvalue = subpara['parasubvalue']
         if expression == '=':
-            if json.loads(parameter.parameters).has_key(subpara['paraname']):
-                if parasubvalue == json.loads(parameter.parameters)[subpara['paraname']]:
+            if json.loads(parameter.parameters).has_key(subpara['subparaname']):
+                if parasubvalue == json.loads(parameter.parameters)[subpara['subparaname']]:
+                    return True
+                else:
+                    return False
+            elif subpara['subparaname'] in source.columns:
+                if parasubvalue == source[subpara['subparaname']][resultindex]:
                     return True
                 else:
                     return False
             else:
-                if parasubvalue == preresult[subpara['paraname']][resultindex]:
+                if parasubvalue == preresult[subpara['subparaname']][resultindex]:
                     return True
                 else:
                     return False
         elif expression == '!=':
-            if json.loads(parameter.parameters).has_key(subpara['paraname']):
-                if parasubvalue != json.loads(parameter.parameters)[subpara['paraname']]:
+            if json.loads(parameter.parameters).has_key(subpara['subparaname']):
+                if parasubvalue != json.loads(parameter.parameters)[subpara['subparaname']]:
                     return True
                 else:
                     return False
             else:
-                if parasubvalue != preresult[subpara['paraname']][resultindex]:
+                if parasubvalue != preresult[subpara['subparaname']][resultindex]:
                     return True
                 else:
                     return False
         elif expression == '>':
-            if json.loads(parameter.parameters).has_key(subpara['paraname']):
-                if parasubvalue > json.loads(parameter.parameters)[subpara['paraname']]:
+            if json.loads(parameter.parameters).has_key(subpara['subparaname']):
+                if parasubvalue > json.loads(parameter.parameters)[subpara['subparaname']]:
                     return True
                 else:
                     return False
             else:
-                if parasubvalue > preresult[subpara['paraname']][resultindex]:
+                if parasubvalue > preresult[subpara['subparaname']][resultindex]:
                     return True
                 else:
                     return False
         elif expression == 'include':
-            if json.loads(parameter.parameters).has_key(subpara['paraname']):
-                if parasubvalue in json.loads(parameter.parameters)[subpara['paraname']]:
+            print subpara
+            if json.loads(parameter.parameters).has_key(subpara['subparaname']):
+                if parasubvalue in json.loads(parameter.parameters)[subpara['subparaname']]:
+                    return True
+                else:
+                    return False
+            elif subpara['subparaname'] in source.columns:
+                if parasubvalue in source[subpara['subparaname']][resultindex]:
                     return True
                 else:
                     return False
             else:
-                if parasubvalue in preresult[subpara['paraname']][resultindex]:
+                if parasubvalue in preresult[subpara['subparaname']][resultindex]:
                     return True
                 else:
                     return False
         elif expression == 'exclude':
-            if json.loads(parameter.parameters).has_key(subpara['paraname']):
-                if parasubvalue in json.loads(parameter.parameters)[subpara['paraname']]:
+            if json.loads(parameter.parameters).has_key(subpara['subparaname']):
+                if parasubvalue in json.loads(parameter.parameters)[subpara['subparaname']]:
                     return False
                 else:
                     return True
             else:
-                if parasubvalue in preresult[subpara['paraname']][resultindex]:
+                if parasubvalue in preresult[subpara['subparaname']][resultindex]:
                     return False
                 else:
                     return True

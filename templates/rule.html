@@ -66,6 +66,7 @@
                     <div class="form-group buttonpost">
                         <button class="btn btn-primary btn-block save" name="saverule" id="saverule"  type="button">Save</button>
                         <button class="btn btn-primary btn-block export" name="export" id="export"  type="button">Export</button>
+                        <label>Import rule from file:</label>
                         <input id="input-b1" name="input-b1" type="file" class="file">
                     </div>
                 </div><!--/left-->
@@ -329,8 +330,11 @@
                         //$(this).siblings('.paraname').append("<option>"+name+"</option>");
                         addselect = addselect + "<option>"+name+"</option>";
                     });
-                    addselect = addselect + "</optgroup>";
-                    addselect = addselect + "<optgroup label=\"Rule\">";
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Source\">";
+                    $(fields).each(function (index, obj) {
+                        addselect = addselect +  "<option>"+obj+"</option>\n";
+                    });
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Rule\">";
                     $('.ruletitle').each(function(k, v){
                         addselect = addselect + "<option>"+$(this).text()+"</option>";
                     });
@@ -393,14 +397,20 @@
 
                 if ($.session.get('paradata'))
                 {
-                    var addselect = "";
+                    var addselect = "<optgroup label=\"Parameters\">";
                     $.each(JSON.parse($.session.get('paradata')),function(name,value) {
                         //$(this).siblings('.paraname').append("<option>"+name+"</option>");
-                        addselect = addselect + "<option>"+name+"</option>"
+                        addselect = addselect + "<option>"+name+"</option>";
                     });
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Source\">";
+                    $(fields).each(function (index, obj) {
+                        addselect = addselect +  "<option>"+obj+"</option>\n";
+                    });
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Rule\">";
                     $('.ruletitle').each(function(k, v){
-                        addselect = addselect + "<option>"+$(this).text()+"</option>"
+                        addselect = addselect + "<option>"+$(this).text()+"</option>";
                     });
+                    addselect = addselect + "</optgroup>";
                     addselect = "<li>\n" +
             "                            <span>\n" +
             "                                <select class=\"paraname input-sm2 col-lg-1\">\n" +addselect+
@@ -471,14 +481,20 @@
             $(".parameter").on("click",".addParasub",function(){
                 if ($.session.get('paradata'))
                 {
-                    var addselect = "";
+                    var addselect = "<optgroup label=\"Parameters\">";
                     $.each(JSON.parse($.session.get('paradata')),function(name,value) {
                         //$(this).siblings('.paraname').append("<option>"+name+"</option>");
-                        addselect = addselect + "<option>"+name+"</option>"
+                        addselect = addselect + "<option>"+name+"</option>";
                     });
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Source\">";
+                    $(fields).each(function (index, obj) {
+                        addselect = addselect +  "<option>"+obj+"</option>\n";
+                    });
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Rule\">";
                     $('.ruletitle').each(function(k, v){
-                        addselect = addselect + "<option>"+$(this).text()+"</option>"
+                        addselect = addselect + "<option>"+$(this).text()+"</option>";
                     });
+                    addselect = addselect + "</optgroup>";
                     addselect = "<ul>\n" +
             "                                <li>\n" +
             "                                    <span>\n" +
@@ -488,7 +504,7 @@
             "                                        </select>\n" +
             "                                    </span>\n" +
             "                                    <span>\n" +
-            "                                        <select class=\"subparaname input-sm2 col-lg-1\">\n" + addselect +
+            "                                        <select class=\"subparaname input-sm2 \">\n" + addselect +
             "                                        </select>\n" +
             "                                    </span>\n" +
             "                                    <span>\n" +
@@ -519,16 +535,20 @@
             $(".parameter").on("click",".add",function(){
                 if ($.session.get('paradata'))
                 {
-                    var addselect = "<optgroup label=\"Parameters\">\n";
+                    var addselect = "<optgroup label=\"Parameters\">";
                     $.each(JSON.parse($.session.get('paradata')),function(name,value) {
                         //$(this).siblings('.paraname').append("<option>"+name+"</option>");
                         addselect = addselect + "<option>"+name+"</option>";
                     });
-                    addselect = addselect + "</optgroup>\n<optgroup label=\"Rules\">\n";
-                    $('.ruletitle').each(function(k, v){
-                        addselect = addselect + "<option>"+$(this).text()+"</option>"
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Source\">";
+                    $(fields).each(function (index, obj) {
+                        addselect = addselect +  "<option>"+obj+"</option>\n";
                     });
-                    addselect = addselect + "</optgroup>\n";
+                    addselect = addselect + "</optgroup>\n<optgroup label=\"Rule\">";
+                    $('.ruletitle').each(function(k, v){
+                        addselect = addselect + "<option>"+$(this).text()+"</option>";
+                    });
+                    addselect = addselect + "</optgroup>";
                     addselect = "<li>\n" +
             "                                    <span>\n" +
             "                                        <select class=\"subcondition input-sm2 \">\n" +
@@ -537,7 +557,7 @@
             "                                        </select>\n" +
             "                                    </span>\n" +
             "                                    <span>\n" +
-            "                                        <select class=\"subparaname input-sm2 col-lg-1\">\n" + addselect +
+            "                                        <select class=\"subparaname input-sm2 \">\n" + addselect +
             "                                        </select>\n" +
             "                                    </span>\n" +
             "                                    <span>\n" +
@@ -722,6 +742,10 @@
                                   $.each(jsondata,function(name,value) {
                                       paraoption = paraoption+ "<option>" + name + "</option>\n";
                                   });
+                                  paraoption = paraoption + "</optgroup>\n<optgroup label=\"Source\">\n";
+                                  $(fields).each(function (index, obj) {
+                                      paraoption = paraoption +  "<option>"+obj+"</option>\n";
+                                  });
                                   paraoption = paraoption + "</optgroup>\n<optgroup label=\"Rules\">\n";
                                   $.session.set('paradata', data2["parameter"]);
                                   var jsondata = JSON.parse(data["rule"])
@@ -769,7 +793,7 @@
                     "                                        </select>\n" +
                     "                                    </span>\n" +
                     "                                    <span>\n" +
-                    "                                        <select class=\"subparaname input-sm2 col-lg-1\">\n" + paraoption2 +
+                    "                                        <select class=\"subparaname input-sm2 \">\n" + paraoption2 +
                     "                                        </select>\n" +
                     "                                    </span>\n" +
                     "                                    <span>\n" +

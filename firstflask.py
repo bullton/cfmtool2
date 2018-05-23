@@ -321,7 +321,10 @@ def index():
 @login_require
 def data():
     if request.method == 'GET':
-        pass
+        user_id = session.get('user_id')
+        static_data = Static_Data.query.filter(Static_Data.owner_id == user_id).order_by(desc(Static_Data.id)).first()
+        data = pd.DataFrame(eval(static_data.data.replace('nan', 'np.nan')))
+        return render_template('data.html', stat=data)
     else:
         user_id = session.get('user_id')
         source_path = request.form.get('selectsource')

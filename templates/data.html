@@ -27,7 +27,7 @@
                             {% for col_name in stat.columns %}
 
                                 {% if col_name == 'PR_ID' %}
-                                    <td><button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bs-example-modal-lg">{{ row[col_name] }}</button></td>
+                                    <td><a class="btn btn-primary" href="https://pronto.int.net.nokia.com/pronto/problemReportSearch.html?freeTextdropDownID=prId&searchTopText={{ row[col_name] }}&HomeFlag=true">{{ row[col_name] }}</a></td>
                                 {% else %}
                                     <td>{{ row[col_name] }}</td>
                                 {% endif %}
