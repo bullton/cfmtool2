@@ -14,6 +14,8 @@ class Static:
     def __init__(self, source, rule, parameter):
         self.source = source
         self.rule = rule
+        self.tdd_release_tag = 'TL18SP'
+        self.fdd_release_tag = 'FL18SP'
         self.parameter = parameter
         titles = ['PR_ID','Opendays','ReportCW','CloseCW','Duplicated','AttachPR','Severity','Top','Release','Comments']
         for eachrule in json.loads(self.rule.rules)['rule']:
@@ -110,7 +112,6 @@ class Static:
                 else:
                     return False
         elif expression == 'include':
-            print subpara
             if json.loads(parameter.parameters).has_key(subpara['subparaname']):
                 if parasubvalue in json.loads(parameter.parameters)[subpara['subparaname']]:
                     return True
@@ -132,7 +133,14 @@ class Static:
                     return False
                 else:
                     return True
+            elif subpara['subparaname'] in source.columns:
+                if parasubvalue in source[subpara['subparaname']][resultindex]:
+                    return False
+                else:
+                    return True
             else:
+                print 'parasubvalue=',parasubvalue
+                print 'fffff=',subpara['subparaname']
                 if parasubvalue in preresult[subpara['subparaname']][resultindex]:
                     return False
                 else:
@@ -180,6 +188,7 @@ class Static:
                             resulttype[i].append(eachpara['return value'])
                         else:
                             pass
+
                 elif eachpara['return'] == 'As Parameter':
                     if (len(para)==1):
                         for i in range(len(result)):
@@ -193,6 +202,8 @@ class Static:
                     pass
 
         for index, value in enumerate(resulttype):
+            if value == []:
+                resulttype[index].append('nan')
             resulttype[index] = ','.join(value)
         return resulttype
 
@@ -315,6 +326,7 @@ class Static:
                 return str(date_time)
         else:
             return np.nan  #Null
+
 
 
     def get_cw(self):
@@ -440,4 +452,5 @@ class Static:
         #self.result['CrossCount'],self.result['TestState'] = self.crosscount_teststat()
         for eachrule in json.loads(self.rule.rules)['rule']:
             self.result[eachrule['title']] = self.execute_rule(eachrule, self.parameter, self.result)
+
         return self.result

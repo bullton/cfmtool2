@@ -92,7 +92,7 @@
                             <span>
                                 <select class="field input-sm2 ">
                                     <script>
-                                        var fieldss = ["Problem ID","Title","Description","Severity","Top Importance","State","Group in Charge","Build","Release","Feature","Author","Reported Date","Test Subphase","Author Group","R&D Priority","Care Contact Group","Care Contact Person","Customer","R&D Information","State Changed to Closed","State Changed to Correction not needed","Additional","Optional","Target Release","Fault ID","Correction State"];
+                                        var fieldss = ["Problem ID","Title","Description","Severity","Top Importance","State","Group in Charge","Build","Release","Feature","Author","Reported Date","Test Subphase","Author Group","R&D Priority","Care Contact Group","Care Contact Person","Customer","R&D Information","State Changed to Closed","State Changed to Correction not needed","Additional","Optional","Target Release","Fault ID","Correction State","Grep_TargetRelease","NoGrep_TargetRelease"];
                                         document.write("<optgroup label=\"Source\">");
                                         $(fieldss).each(function (index, obj) {
                                             document.write("<option>"+obj+"</option>\n");
@@ -140,7 +140,7 @@
         </div><!--/row-->
     </div><!--/container-->
     <script>
-        var fields = ["Problem ID","Title","Description","Severity","Top Importance","State","Group in Charge","Build","Release","Feature","Author","Reported Date","Test Subphase","Author Group","R&D Priority","Care Contact Group","Care Contact Person","Customer","R&D Information","State Changed to Closed","State Changed to Correction not needed","Additional","Optional","Target Release","Fault ID","Correction State"];
+        var fields = ["Problem ID","Title","Description","Severity","Top Importance","State","Group in Charge","Build","Release","Feature","Author","Reported Date","Test Subphase","Author Group","R&D Priority","Care Contact Group","Care Contact Person","Customer","R&D Information","State Changed to Closed","State Changed to Correction not needed","Additional","Optional","Target Release","Fault ID","Correction State","Grep_TargetRelease","NoGrep_TargetRelease"];
         var fieldshtml = "<select class=\"field input-sm2 \">\n"+
                 "<optgroup label=\"Source\">";
         $(fields).each(function (index, obj) {
@@ -600,10 +600,23 @@
                       success: function (data) {
                           var jsondata = JSON.parse(data["parameter"]);
                           $('.paraname').empty();
+                          $('.field').empty();
+                          $('.paraname').append("<optgroup label=\"Parameters\">");
+                          $('.field').append("<optgroup label=\"Parameters\">");
                           $.each(jsondata,function(name,value) {
                               $('.paraname').append("<option>"+name+"</option>");
                               $('.field').append("<option>"+name+"</option>");
                           });
+                          $('.paraname').append("</optgroup>");
+                          $('.field').append("</optgroup>");
+                          $('.paraname').append("<optgroup label=\"Source\">");
+                          $('.field').append("<optgroup label=\"Source\">");
+                          $.each(fields,function(i,item) {
+                              $('.paraname').append("<option>"+item+"</option>");
+                              $('.field').append("<option>"+item+"</option>");
+                          });
+                          $('.paraname').append("</optgroup>");
+                          $('.field').append("</optgroup>");
                           $.session.set('paradata', data["parameter"]);
                       }
                     });
@@ -748,6 +761,21 @@
                                   });
                                   paraoption = paraoption + "</optgroup>\n<optgroup label=\"Rules\">\n";
                                   $.session.set('paradata', data2["parameter"]);
+                                  var fieldshtmlss = "<select class=\"field input-sm2 \">\n"+
+                                            "<optgroup label=\"Source\">";
+                                  $(fields).each(function (index, obj) {
+                                      var tmps = "<option>"+obj+"</option>\n";
+                                      fieldshtmlss = fieldshtmlss + tmps;
+                                  });
+                                  fieldshtmlss = fieldshtmlss + "</optgroup>\n"+
+                                      "<optgroup label=\"Parameters\">";
+                                  if ($.session.get('paradata')) {
+                                      $.each(JSON.parse($.session.get('paradata')), function (name, value) {
+                                          //$(this).siblings('.paraname').append("<option>"+name+"</option>");
+                                          fieldshtmlss=fieldshtmlss+"<option>"+name+"</option>\n";
+                                      });
+                                  }
+                                  fieldshtmlss = fieldshtmlss + "</optgroup>\n</select>\n";
                                   var jsondata = JSON.parse(data["rule"])
                                   $('.parameter').children().remove()
                                   var rulehtml = "";
@@ -771,7 +799,7 @@
                                           var return_html = "";
                                           var fieldhtml = "";
                                           $(seachfield).each(function (index, obj) {
-                                              fieldhtmltmp = fieldshtml;
+                                              fieldhtmltmp = fieldshtmlss;
                                               fieldhtmltmp=fieldhtmltmp.replace("<option>"+obj+"</option>","<option selected = \"selected\">"+obj+"</option>");
                                               fieldhtml = fieldhtml + fieldhtmltmp;
                                           });

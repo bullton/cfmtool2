@@ -136,6 +136,13 @@ def save_file_path(folder, extend):
     return fullpath, filename
 
 
+def get_xdd_release_tag(release):
+    if 'T' in release:
+        return release, release.replace('T','F')
+    else:
+        return release.replace('F', 'T'), release
+
+
 def static_bar_severity(data, title):
     ind = np.arange(3)
     width = 0.3
@@ -338,6 +345,23 @@ def data():
         # titles = ['PR_ID','CustomerImpact','BBU','RRU','Category','Opendays','ReportCW','CloseCW','CrossCount','Duplicated','AttachPR','TestState','Severity','Top','Release','Comments']
         stat = pd.DataFrame()
         rule = Rule.query.filter(Rule.id == select_rule).first()
+        tdd_release_tag,fdd_release_tag = get_xdd_release_tag(rule.release)
+        list_tmp = []
+        list_tmp2 = []
+        for index, row in data.iterrows():
+            dict_target_teststat = dict(zip(data['Target Release'][index].split(', '),data['Correction State'][index].split(', ')))
+            d1 = {k: v for k, v in dict_target_teststat.items() if v in ['Testing Not Needed','Needless','Tested']}
+            #print d1
+            #print d2
+            list_tmp.append(','.join(list(d1.keys())))
+            list_tmp2.append(','.join(list(dict_target_teststat.keys())))
+        print 'listtmp2=', list_tmp2
+        print 'listtmp=', list_tmp
+        data['Grep_TargetRelease']=list_tmp
+        data['NoGrep_TargetRelease']=list_tmp2
+        print data['Grep_TargetRelease']
+        print data['NoGrep_TargetRelease']
+
         parameter = Parameters.query.filter(Parameters.id == rule.parameter_id).first()
         static = Static(data, rule, parameter)
         stat = static.static()
@@ -549,6 +573,31 @@ def pararef():
                     "customer":para.customer,
                     "parameter":para.parameters
                     })
+
+
+@app.route('/parameters/update/',methods=['GET','POST'])
+@login_require
+def editparameter():
+    user_id = session.get('user_id')
+    userrulelist = Rule.query.filter(Rule.owner_id == user_id).order_by(desc(Rule.id)).all()
+    if request.method == 'GET':
+        print 'get'
+        pass
+    else:
+        print 'post'
+        paras = request.form.get('postdata')
+        name = request.form.get('name')
+        release = request.form.get('release')
+        customer = request.form.get('customer')
+        parameter = request.form.get('paraid')
+        para = Parameters.query.filter(Parameters.name == name).first()
+        if para:
+            para.customer = customer
+            para.release = release
+            para.parameters = paras
+            db.session.commit()
+            return jsonify({"message": "Parameter is already sucessfully updated!"})
+
 
 @app.route('/rules/',methods=['GET','POST'])
 @login_require

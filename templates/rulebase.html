@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='css/parameter.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/fileinput.min.css') }}">
     <script src="{{ url_for('static',filename='js/fileinput.min.js') }}" async></script>
+    <script src="{{ url_for('static',filename='js/jquery.session.js') }}" async></script>
 {% endblock %}
 
 {% block main %}
@@ -69,6 +70,7 @@
             "                        </li>";
 
         $(document).ready(function(){
+            $.session.clear();
             $(".parameters").on("click",".addPara",function(){
                 $(parameter).insertAfter($(this).parents('li').first())
             });
@@ -90,15 +92,32 @@
                     "release":release,
                     "customer":customer
                 }
-                $.ajax({
-                  type: "post",
-                  url: '/parameters/',
-                  data:postdata,
-                  dataType: 'json',
-                  success: function (data) {
-                      alert(data["message"])
-                  }
-                });
+                alert($.session.get('paradata'))
+                if (name != $.session.get('paradata'))
+                {
+                    $.ajax({
+                      type: "post",
+                      url: '/parameters/',
+                      data:postdata,
+                      dataType: 'json',
+                      success: function (data) {
+                          alert(data["message"])
+                      }
+                    });
+                }
+                else
+                {
+                    $.ajax({
+                      type: "post",
+                      url: '/parameters/update/',
+                      data:postdata,
+                      dataType: 'json',
+                      success: function (data) {
+                          alert(data["message"])
+                      }
+                    });
+                }
+
             });
             $(".paraid").change(function(){
 
@@ -124,6 +143,7 @@
                                   "                <button type=\"button\" class=\"btn btn-danger delPara\">Delete</button>\n" +
                                   "            </li>")
                           });
+                          $.session.set('paradata', data["name"]);
                       }
                     });
                 }
